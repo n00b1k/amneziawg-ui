@@ -1,9 +1,9 @@
-FROM golang:alpine AS builder
+FROM golang:alpine3.22 AS builder
 RUN apk add --no-cache git make gcc musl-dev linux-headers
 RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && cd amneziawg-go && make && make install
 RUN git clone https://github.com/amnezia-vpn/amneziawg-tools.git && cd amneziawg-tools/src && make && make WITH_WGQUICK=yes install
 
-FROM alpine:3.21
+FROM alpine:3.22
 
 COPY --from=builder /usr/bin/amneziawg-go /usr/bin/amneziawg-go
 COPY --from=builder /usr/bin/awg /usr/bin/awg
