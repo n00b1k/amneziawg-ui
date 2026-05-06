@@ -1,6 +1,7 @@
 // AmneziaWG Web UI - Main Application JavaScript
 import * as ui from './ui.js';
 import * as api from './api.js'
+import * as server from './server.js';
 
 
 class AmneziaApp {
@@ -17,6 +18,9 @@ class AmneziaApp {
             this.loadInitialData();
             this.loadDefaultISettings();
 //            this.createLogsSection();
+            server.setRefreshClientsCallback((serverId) => {
+                this.loadServerClients(serverId);
+            });
         });
     }
 
@@ -305,13 +309,12 @@ class AmneziaApp {
     }
 
 
-    refreshPublicIp() {
-        api.refreshPublicIp()
-            .then(data => {
-                ui.updatePublicIp(data.public_ip);
-                this.loadServers();
-            })
-            .catch(error => console.error('Error refreshing IP:', error));
+    async refreshPublicIp() {
+        try {
+            const data = await api.refreshPublicIp();
+            ui.updatePublicIp(data.public_ip);
+            await server.loadServers();
+        } catch (error) { console.error(error); }
     }
 
     generateRandomParams() {
@@ -493,7 +496,7 @@ class AmneziaApp {
     }
 
 
-    createServer() {
+    async createServer() {
         console.log("Creating server...");
 
         if (!this.validateForm()) {
@@ -572,19 +575,15 @@ class AmneziaApp {
         // Disable button and show loading
         this.setCreateButtonState(true);
 
-        api.createServer(formData)
-            .then(server => {
-                this.showFormStatus(`Server "${server.name}" created successfully!`, 'success');
-                const serverForm = ui.getElement('serverForm');
-                if (serverForm) serverForm.reset();
-                this.loadServers();
-            })
-            .catch(error => {
-                this.showFormStatus('Error creating server: ' + error.message, 'error');
-            })
-            .finally(() => {
-                this.setCreateButtonState(false);
-            });
+        try {
+            const newServer = await api.createServer(formData);
+            ui.showTempMessage(`Server "${newServer.name}" created!`, 'success');
+            const form = ui.getElement('serverForm');
+            if (form) form.reset();
+            await server.loadServers();
+        } catch (err) {
+            this.showFormStatus('Error creating server: ' + error.message, 'error');
+        }
     }
 
     setCreateButtonState(loading) {
@@ -830,38 +829,6 @@ class AmneziaApp {
         }
     }
 
-
-    startServer(serverId) {
-        api.startServer(serverId)
-            .then(() => this.loadServers())
-            .catch(error => {
-                console.error('Error starting server:', error);
-                alert('Error starting server: ' + error.message);
-            });
-    }
-
-
-    stopServer(serverId) {
-        api.stopServer(serverId)
-            .then(() => this.loadServers())
-            .catch(error => {
-                console.error('Error stopping server:', error);
-                alert('Error stopping server: ' + error.message);
-            });
-    }
-
-
-    // Server management methods
-    deleteServer(serverId) {
-        if (confirm('Are you sure you want to delete this server and all its clients?')) {
-            api.deleteServer(serverId)
-                .then(() => this.loadServers())
-                .catch(error => {
-                    console.error('Error deleting server:', error);
-                    alert('Error deleting server: ' + error.message);
-                });
-        }
-    }
 
     deleteClient(serverId, clientId) {
         if (confirm('Are you sure you want to delete this client?')) {
@@ -2058,4 +2025,38 @@ class AmneziaApp {
 
 // Initialize the application
 const app = new AmneziaApp();
-window.amneziaApp = app;
+window.amneziaApp = {
+    // Из server.js
+    deleteServer: server.deleteServer,
+    startServer: server.startServer,
+    stopServer: server.stopServer,
+
+    // Из main.js (оставшиеся методы)
+    addClient: (serverId) => app.addClient(serverId),
+    editClient: (serverId, clientId) => app.editClient(serverId, clientId),
+    deleteClient: (serverId, clientId) => app.deleteClient(serverId, clientId),
+    suspendClient: (serverId, clientId) => app.suspendClient(serverId, clientId),
+    activateClient: (serverId, clientId) => app.activateClient(serverId, clientId),
+    downloadClientConfig: (serverId, clientId) => app.downloadClientConfig(serverId, clientId),
+    showClientQRCode: (serverId, clientId, clientName) => app.showClientQRCode(serverId, clientId, clientName),
+    closeQRModal: () => app.closeQRModal(),
+    saveClient: () => app.saveClient(),
+    closeClientModal: () => app.closeClientModal(),
+    toggleConfigView: () => app.toggleConfigView(),
+    copyConfigText: () => app.copyConfigText(),
+    downloadQRCode: () => app.downloadQRCode(),
+    showServerConfig: (serverId) => app.showServerConfig(serverId),
+    showRawServerConfig: (serverId) => app.showRawServerConfig(serverId),
+    downloadServerConfig: (serverId) => app.downloadServerConfig(serverId),
+    closeModal: () => app.closeModal(),
+    copyToClipboard: (text) => app.copyToClipboard(text),
+    toggleLogsSection: () => app.toggleLogsSection(),
+    reloadCurrentLog: () => app.reloadCurrentLog(),
+    downloadCurrentLog: () => app.downloadCurrentLog(),
+    switchLogTab: (index) => app.switchLogTab(index),
+    createServer: () => app.createServer(),
+    refreshPublicIp: () => app.refreshPublicIp(),
+    toggleForm: () => app.toggleForm(),
+    generateRandomParams: () => app.generateRandomParams(),
+    logout: () => app.logout()
+};
