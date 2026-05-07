@@ -20,7 +20,7 @@ class AmneziaApp {
             this.loadInitialData();
             this.loadDefaultISettings();
             server.setRefreshClientsCallback((serverId) => {
-                this.loadServerClients(serverId);
+                client.loadServerClients(serverId);
             });
             logs.createLogsSection();
         });
@@ -300,7 +300,7 @@ class AmneziaApp {
 
         this.socket.on('server_status', (data) => {
             console.log("Server status update:", data);
-            this.loadServers();
+            server.loadServers();
         });
 
         this.socket.on('traffic_update', (data) => {
@@ -598,7 +598,7 @@ class AmneziaApp {
     }
 
     loadInitialData() {
-        this.loadServers();
+        server.loadServers();
         this.loadPublicIp();
     }
 
@@ -608,203 +608,6 @@ class AmneziaApp {
             .catch(error => console.error(error));
     }
 
-    loadServers() {
-        api.getServers()
-            .then(servers => {
-                this.servers = servers;
-                this.renderServers(servers);
-            })
-            .catch(error => {
-                console.error('Error loading servers:', error);
-                this.showServerError('Failed to load servers');
-            });
-    }
-
-    renderServers(servers) {
-        const serversList = ui.getElement('serversList');
-        if (!serversList) return;
-
-        if (servers.length === 0) {
-            serversList.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    No servers created yet. Create your first server above.
-                </div>
-            `;
-            return;
-        }
-
-        serversList.innerHTML = servers.map(server => `
-            <div class="bg-white rounded-lg shadow-md p-6" data-server-id="${server.id}">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="text-lg font-semibold">${server.name}</h3>
-                        <p class="text-sm text-gray-600">
-                            ID: ${server.id} | Port: ${server.port} | Subnet: ${server.subnet}
-                            ${server.obfuscation_enabled ? '| 🔒 Obfuscated' : ''}
-                            ${server.public_ip ? `| 🌐 Public IP: ${server.public_ip}` : ''}
-                        </p>
-                        <div class="server-interface-traffic text-xs text-gray-500 mt-1">
-                            📡 Loading interface traffic...
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-3 py-1 rounded-full text-sm ${
-                            server.status === 'running' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }">${server.status}</span>
-                        <button onclick="amneziaApp.deleteServer('${server.id}')" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-                <div class="space-x-2 mb-4">
-                    <button onclick="amneziaApp.startServer('${server.id}')" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
-                        Start
-                    </button>
-                    <button onclick="amneziaApp.stopServer('${server.id}')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                        Stop
-                    </button>
-                    <button onclick="amneziaApp.addClient('${server.id}')" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                        Add Client
-                    </button>
-                    <button onclick="amneziaApp.showServerConfig('${server.id}')" class="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600">
-                        Show Config
-                    </button>
-                </div>
-                <div id="clients-${server.id}">
-                    ${this.renderServerClients(server.id, server.clients || [])}
-                </div>
-            </div>
-        `).join('');
-
-        // Load clients for each server
-        servers.forEach(server => {
-            this.loadServerClients(server.id);
-        });
-        
-        // Load initial server interface traffic
-        this.loadAllServerTraffic();
-    }
-
-    renderServerClients(serverId, clients, traffic = {}) {
-        if (clients.length === 0) {
-            return '<p class="text-gray-500 text-sm">No clients yet.</p>';
-        }
-        
-        return `
-            <h4 class="font-medium mb-2">Clients (${clients.length}):</h4>
-            <div class="space-y-2">
-                ${clients.map(client => {
-                    const clientData = traffic[client.id] || {
-                        received: '0 B',
-                        sent: '0 B',
-                        last_handshake: 'Never',
-                        endpoint: ''
-                    };
-                    const hasISettings = client.apply_i_settings || false;
-                    const clientStatus = client.status || 'active';
-                    
-                    // Format handshake time for display
-                    const handshakeDisplay = clientData.last_handshake !== 'Never'
-                        ? `🕒 ${clientData.last_handshake}`
-                        : '🕒 Never';
-                    
-                    // Status badge
-                    const statusBadge = clientStatus === 'suspended'
-                        ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full ml-2">Suspended</span>'
-                        : '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full ml-2">Active</span>';
-                    
-                    return `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 client-item"
-                        data-client-id="${client.id}">
-                        
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded-full mr-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-medium">${client.name}</span>
-                                    <span class="text-sm text-gray-600 ml-2">${client.client_ip}</span>
-                                    ${hasISettings ? '<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full ml-2">I-settings</span>' : ''}
-                                    ${statusBadge}
-                                </div>
-                                <div class="flex items-center space-x-4 mt-1">
-                                    <span class="text-xs text-gray-500 client-traffic">
-                                        🔽 ${clientData.received} &nbsp; 🔼 ${clientData.sent}
-                                    </span>
-                                    <span class="text-xs text-gray-500 client-handshake"
-                                        title="Last Handshake: ${clientData.last_handshake}">
-                                        🕒 ${clientData.last_handshake}
-                                    </span>
-                                    <span class="text-xs text-gray-500 client-endpoint ${!clientData.endpoint ? 'hidden' : ''}"
-                                        title="Endpoint: ${clientData.endpoint || ''}">
-                                        🌐 ${clientData.endpoint || ''}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="amneziaApp.editClient('${serverId}', '${client.id}')"
-                                    class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
-                                    title="Edit Client">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                Edit
-                            </button>
-                            <button onclick="amneziaApp.showClientQRCode('${serverId}', '${client.id}', '${client.name}')"
-                                    class="bg-purple-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
-                                    title="Show QR Code">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                                </svg>
-                                QR Code
-                            </button>
-                            <button onclick="amneziaApp.downloadClientConfig('${serverId}', '${client.id}')"
-                                    class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                Download
-                            </button>
-                            ${clientStatus === 'suspended'
-                                ? `<button onclick="amneziaApp.activateClient('${serverId}', '${client.id}')"
-                                        class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
-                                        title="Activate Client">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Activate
-                                </button>`
-                                : `<button onclick="amneziaApp.suspendClient('${serverId}', '${client.id}')"
-                                        class="bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
-                                        title="Suspend Client">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Suspend
-                                </button>`
-                            }
-                            <button onclick="amneziaApp.deleteClient('${serverId}', '${client.id}')"
-                                class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    }
 
     loadServerClients(serverId) {
         Promise.all([
@@ -813,7 +616,7 @@ class AmneziaApp {
         ]).then(([clients, traffic]) => {
             const clientsContainer = ui.getElement(`clients-${serverId}`);
             if (clientsContainer) {
-                clientsContainer.innerHTML = this.renderServerClients(serverId, clients, traffic);
+                clientsContainer.innerHTML = amneziaApp.renderServerClients(serverId, clients, traffic);
             }
         }).catch(error => {
             console.error(`Error loading clients or traffic for server ${serverId}:`, error);
