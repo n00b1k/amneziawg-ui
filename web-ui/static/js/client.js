@@ -80,7 +80,7 @@ export function showClientQRCode(serverId, clientId, clientName) {
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
-                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
                         <div class="flex justify-between">
                             <div><span class="font-medium">Created:</span> <span id="createdAt">Loading...</span></div>
                             <div><span class="font-medium">Auto-suspend:</span> <span id="suspendAt">Not set</span></div>
@@ -103,8 +103,8 @@ export function showClientQRCode(serverId, clientId, clientName) {
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-sm font-medium text-gray-700">Configuration preview</label>
                                 <div class="flex space-x-2">
-                                    <button onclick="window.amneziaApp.toggleConfigView()" class="text-blue-500 border border-blue-200 px-3 py-1.5 rounded-lg">Toggle View</button>
-                                    <button onclick="window.amneziaApp.copyConfigText()" class="bg-blue-500 text-white px-4 py-1.5 rounded-lg">Copy Config</button>
+                                    <button onclick="window.amneziaApp.toggleConfigView()" class="text-blue-500 border border-blue-200 px-3 py-1.5 rounded">Toggle View</button>
+                                    <button onclick="window.amneziaApp.copyConfigText()" class="bg-blue-500 text-white px-4 py-1.5 rounded">Copy Config</button>
                                 </div>
                             </div>
                             <textarea id="configText" rows="12" class="w-full px-4 py-3 border-2 rounded-xl text-sm font-mono bg-gray-50" readonly placeholder="Loading configuration..."></textarea>
@@ -238,7 +238,7 @@ async function showClientModal(serverId, client = null) {
 
     const defaultISettings = serverInfo.default_i_settings || {};
     const createdHtml = (client && client.created_at) ? `
-        <div class="bg-gray-50 p-3 rounded-lg mb-4">
+        <div class="bg-gray-50 p-3 rounded mb-4">
             <div class="flex justify-between">
                 <div><span class="text-xs text-gray-500">Created at:</span> <span class="text-sm font-mono">${new Date(client.created_at * 1000).toLocaleString()}</span></div>
                 <div class="text-xs text-gray-400">${Math.floor((Date.now() - client.created_at * 1000) / 86400000)} days ago</div>
@@ -274,7 +274,7 @@ async function showClientModal(serverId, client = null) {
                                 <input type="checkbox" id="applyISettings" ${applyISettings ? 'checked' : ''} class="h-4 w-4 text-blue-600">
                                 <label class="ml-3 text-sm font-medium text-gray-700">Apply I-settings (AmneziaWG 1.5)</label>
                             </div>
-                            <div id="iSettingsSection" style="display: ${applyISettings ? 'block' : 'none'};" class="mt-4 p-4 bg-gray-50 rounded-lg border space-y-4">
+                            <div id="iSettingsSection" style="display: ${applyISettings ? 'block' : 'none'};" class="mt-4 p-4 bg-gray-50 rounded border space-y-4">
                                 <h4 class="text-sm font-medium">I-settings (optional)</h4>
                                 ${[1,2,3,4,5].map(i => `
                                     <div><label for="i${i}">I${i}</label><input type="text" id="i${i}" value="${escapeHtml(iSettings[`i${i}`] || '')}" class="w-full px-3 py-2 border rounded-md text-sm" placeholder="${defaultISettings[`i${i}`] ? 'Server default: ' + defaultISettings[`i${i}`].substring(0,50)+'...' : 'leave empty'}"></div>
@@ -282,8 +282,8 @@ async function showClientModal(serverId, client = null) {
                             </div>
                         </div>
                         <div class="flex justify-end space-x-4 pt-6 border-t">
-                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded-xl">Cancel</button>
-                            <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded-xl">${isEdit ? 'Update Client' : 'Add Client'}</button>
+                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded">Cancel</button>
+                            <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded">${isEdit ? 'Update Client' : 'Add Client'}</button>
                         </div>
                     </form>
                 </div>
@@ -374,7 +374,7 @@ function renderServerClients(serverId, clients, traffic = {}) {
                 const isSuspended = client.status === 'suspended';
                 const statusBadge = isSuspended ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full ml-2">Suspended</span>' : '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full ml-2">Active</span>';
                 return `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 client-item" data-client-id="${client.id}">
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded hover:bg-gray-100 client-item" data-client-id="${client.id}">
                         <div class="flex items-center">
                             <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
