@@ -1,6 +1,6 @@
 import os
 
-APP_VERSION = '1.3.9'
+APP_VERSION = '1.3.11'
 
 # Get the absolute path to the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +40,8 @@ DEFAULT_I5 = ""
 
 # Allowlisted log files
 ALLOWED_LOG_FILES = [
+    {"name": "Amnezia App", "path": "/var/log/amnezia/app.log", "type": "info"},
+    {"name": "Test", "path": "/var/log/amnezia/test.log", "type": "info"},
     {"name": "Supervisor", "path": "/var/log/supervisor/supervisord.log", "type": "info"},
     {"name": "WebUI Access", "path": "/var/log/webui/access.log", "type": "access"},
     {"name": "WebUI Error", "path": "/var/log/webui/error.log", "type": "error"}

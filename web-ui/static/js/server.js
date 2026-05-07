@@ -1,6 +1,7 @@
 // static/js/server.js
 import { getElement, escapeHtml, showTempMessage } from './ui.js';
 import * as api from './api.js';
+import { loadServerClients } from './client.js';
 
 // Колбэк для обновления клиентов (будет установлен из main.js)
 let refreshClientsCallback = null;
@@ -61,6 +62,10 @@ function renderServers(servers) {
             </div>
         </div>
     `).join('');
+
+    if (typeof loadServerClients === 'function') {
+        servers.forEach(server => loadServerClients(server.id));
+    }
 
     // Обновляем клиенты для каждого сервера через колбэк
     if (refreshClientsCallback) {

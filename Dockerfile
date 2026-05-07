@@ -23,7 +23,7 @@ RUN apk update && apk add \
 
 RUN pip3 install flask flask_socketio flask-login bcrypt requests python-socketio waitress --break-system-packages
 
-RUN mkdir -p /app/web-ui /var/log/amnezia /etc/amnezia/amneziawg /custom-certs
+RUN mkdir -p /app/web-ui /var/log/amnezia /var/log/supervisor /etc/amnezia/amneziawg /custom-certs
 
 COPY web-ui /app/web-ui/
 

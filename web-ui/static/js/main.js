@@ -2,6 +2,8 @@
 import * as ui from './ui.js';
 import * as api from './api.js'
 import * as server from './server.js';
+import * as client from './client.js';
+import * as logs from './logs.js';
 
 
 class AmneziaApp {
@@ -17,10 +19,10 @@ class AmneziaApp {
             this.setupSocketIO();
             this.loadInitialData();
             this.loadDefaultISettings();
-//            this.createLogsSection();
             server.setRefreshClientsCallback((serverId) => {
                 this.loadServerClients(serverId);
             });
+            logs.createLogsSection();
         });
     }
 
@@ -830,18 +832,6 @@ class AmneziaApp {
     }
 
 
-    deleteClient(serverId, clientId) {
-        if (confirm('Are you sure you want to delete this client?')) {
-            api.deleteClient(serverId, clientId)
-                .then(() => this.loadServers())
-                .catch(error => {
-                    console.error('Error deleting client:', error);
-                    alert('Error deleting client: ' + error.message);
-                });
-        }
-    }
-
-
     showClientModal(serverId, client = null) {
         const modalTitle = client ? 'Edit Client' : 'Add New Client';
         const clientName = client ? client.name : '';
@@ -1063,142 +1053,6 @@ class AmneziaApp {
         }
     }
 
-    closeClientModal() {
-        const existingModal = document.getElementById('clientModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-    }
-
-    saveClient() {
-        const serverId = document.getElementById('serverId').value;
-        const clientId = document.getElementById('clientId').value;
-        const clientName = document.getElementById('clientName').value.trim();
-        const applyISettings = document.getElementById('applyISettings').checked;
-        
-        if (!clientName) {
-            ui.showTempMessage('Client name is required', 'error');
-            return;
-        }
-
-        const data = {
-            name: clientName,
-            apply_i_settings: applyISettings
-        };
-
-        // Collect I-settings if checkbox is checked
-        if (applyISettings) {
-            const iSettings = {};
-            for (let i = 1; i <= 5; i++) {
-                const input = document.getElementById(`i${i}`);
-                if (input) {
-                    const value = input.value.trim();
-                    if (value) {
-                        iSettings[`i${i}`] = value;
-                    }
-                }
-            }
-            data.i_settings = iSettings;
-        }
-
-        console.log('Saving client with data:', data);
-        
-        let url, method;
-        
-        if (clientId) {
-            // Save client I-settings first
-            api.updateClientISettings(serverId, clientId, data)
-                .then(() => {
-                    // Далее работа с suspend-time (отдельный вызов)
-                    const suspendAtInput = document.getElementById('suspendAt');
-                    let suspendAtUTC = null;
-                    if (suspendAtInput && suspendAtInput.value) {
-                        const localDate = new Date(suspendAtInput.value);
-                        suspendAtUTC = localDate.toISOString();
-                    }
-                    if (suspendAtUTC !== undefined) {
-                        return api.setClientSuspendTime(serverId, clientId, suspendAtUTC);
-                    }
-                    return Promise.resolve();
-                })
-                .then(() => {
-                    ui.showTempMessage('Client updated successfully!', 'success');
-                    this.closeClientModal();
-                    this.loadServers();
-                })
-                .catch(error => {
-                    console.error('Error saving client:', error);
-                    ui.showTempMessage(`Error saving client: ${error.message}`, 'error');
-                });
-        } else {
-            // Create new client
-            api.addClient(serverId, data)
-                .then(() => {
-                    ui.showTempMessage('Client added successfully!', 'success');
-                    this.closeClientModal();
-                    this.loadServers();
-                })
-                .catch(error => {
-                    console.error('Error saving client:', error);
-                    ui.showTempMessage(`Error saving client: ${error.message}`, 'error');
-                });
-        }
-    }
-
-    addClient(serverId) {
-        this.showClientModal(serverId);
-    }
-
-    editClient(serverId, clientId) {
-        // Find the client in the loaded servers data
-        const server = this.servers?.find(s => s.id === serverId);
-        if (server) {
-            const client = server.clients?.find(c => c.id === clientId);
-            if (client) {
-                this.showClientModal(serverId, client);
-                return;
-            }
-        }
-        
-        // If not found in loaded data, fetch it
-        api.getServerInfo(serverId)
-            .then(serverInfo => {
-                const client = serverInfo.clients?.find(c => c.id === clientId);
-                if (client) {
-                    this.showClientModal(serverId, client);
-                } else {
-                    ui.showTempMessage('Client not found', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching client:', error);
-                ui.showTempMessage('Error loading client: ' + error.message, 'error');
-            });
-    }
-
-    suspendClient(serverId, clientId) {
-        api.suspendClient(serverId, clientId)
-            .then(() => {
-                ui.showTempMessage('Client suspended successfully', 'success');
-                this.loadServers();
-            })
-            .catch(error => {
-                console.error('Error suspending client:', error);
-                alert('Error suspending client: ' + error.message);
-            });
-    }
-
-    activateClient(serverId, clientId) {
-        api.activateClient(serverId, clientId)
-            .then(() => {
-                ui.showTempMessage('Client activated successfully', 'success');
-                this.loadServers();
-            })
-            .catch(error => {
-                console.error('Error activating client:', error);
-                alert('Error activating client: ' + error.message);
-            });
-    }
 
     loadDefaultISettings() {
         api.getDefaults()
@@ -1231,9 +1085,6 @@ class AmneziaApp {
         });
     }
 
-    downloadClientConfig(serverId, clientId) {
-        window.open(`/api/servers/${serverId}/clients/${clientId}/config`, '_blank');
-    }
 
     showServerConfig(serverId) {
         api.getServerInfo(serverId)
@@ -1421,137 +1272,6 @@ class AmneziaApp {
         }
     }
 
-    showClientQRCode(serverId, clientId, clientName) {
-        const modalHtml = `
-            <div id="qrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-                <div class="relative p-8 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-2xl rounded-2xl bg-white">
-                    <div class="flex flex-col">
-                        <div class="flex justify-between items-center w-full mb-6">
-                            <h3 class="text-xl font-bold text-gray-900">QR Code for ${clientName}</h3>
-                            <button onclick="amneziaApp.closeQRModal()"
-                                    class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <!-- Date Information Section -->
-                        <div id="dateInfo" class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <div class="flex justify-between items-center">
-                                <div class="text-sm">
-                                    <span class="font-medium text-gray-700">Created:</span>
-                                    <span id="createdAt" class="text-gray-600 ml-2">Loading...</span>
-                                </div>
-                                <div class="text-sm">
-                                    <span class="font-medium text-gray-700">Auto-suspend:</span>
-                                    <span id="suspendAt" class="text-gray-600 ml-2">Not set</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- QR Too Large Warning -->
-                        <div id="qrTooLargeWarning" class="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 hidden">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
-                                        <strong>Config too large for QR code!</strong><br>
-                                        The configuration exceeds QR code capacity. Please use "Download Config File" instead.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex flex-col lg:flex-row gap-8 mb-6">
-                            <!-- Left side: QR Code -->
-                            <div class="lg:w-2/5">
-                                <div id="qrCodeContainer" class="bg-white p-6 rounded-xl border-2 border-gray-100 shadow-inner">
-                                    <div id="qrcode" class="flex justify-center mb-4"></div>
-                                    <p id="qrCodeText" class="text-center text-sm text-gray-500">Scan with AmneziaWG / AmneziaVPN app</p>
-                                </div>
-                                <!-- Download QR Code button outside the box -->
-                                <div class="mt-4 text-center">
-                                    <button onclick="amneziaApp.downloadQRCode()"
-                                            id="downloadQRBtn"
-                                            class="inline-flex items-center bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow hover:shadow-lg transform hover:-translate-y-0.5">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
-                                        Download QR Code Image
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Right side: Configuration Text -->
-                            <div class="lg:w-3/5">
-                                <div class="mb-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Configuration preview</label>
-                                        <div class="flex space-x-2">
-                                            <button onclick="amneziaApp.toggleConfigView()"
-                                                    class="text-blue-500 hover:text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors duration-200">
-                                                Toggle View
-                                            </button>
-                                            <button onclick="amneziaApp.copyConfigText()"
-                                                    class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 shadow hover:shadow-md">
-                                                Copy Config
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <textarea id="configText" rows="12"
-                                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                                        readonly
-                                        placeholder="Loading configuration..."></textarea>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span id="configType" class="text-xs font-medium text-blue-500">Clean Config</span>
-                                        <span id="configLength" class="text-xs text-gray-500"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-4 w-full pt-6 border-t border-gray-200">
-                            <button onclick="amneziaApp.downloadClientConfig('${serverId}', '${clientId}')"
-                                    class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 shadow hover:shadow-lg transform hover:-translate-y-0.5">
-                                <svg class="w-5 h-5 inline mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                Download Config File (.conf)
-                            </button>
-                            <button onclick="amneziaApp.closeQRModal()"
-                                    class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 shadow hover:shadow-lg">
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Close any existing modal first
-        this.closeQRModal();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Store references
-        this.qrServerId = serverId;
-        this.qrClientId = clientId;
-        this.qrClientName = clientName;
-
-        // Fetch client config and generate QR code
-        this.fetchAndGenerateQRCode();
-    }
-
-    closeQRModal() {
-        const existingModal = document.getElementById('qrModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-    }
 
     async fetchAndGenerateQRCode() {
         try {
@@ -1722,56 +1442,6 @@ class AmneziaApp {
         }
     }
 
-    toggleConfigView() {
-        const configTextArea = document.getElementById('configText');
-        
-        if (this.currentConfigType === 'clean') {
-            // Switch to full config
-            configTextArea.value = this.currentFullConfig;
-            this.currentConfigType = 'full';
-        } else {
-            // Switch to clean config
-            configTextArea.value = this.currentCleanConfig;
-            this.currentConfigType = 'clean';
-        }
-        
-        this.updateConfigTypeLabel();
-    }
-
-    downloadQRCode() {
-        const qrContainer = document.getElementById('qrcode');
-        if (!qrContainer) return;
-        
-        const canvas = qrContainer.querySelector('canvas');
-        if (!canvas) return;
-        
-        // Create a temporary link to download the canvas as PNG
-        const link = document.createElement('a');
-        link.download = `${this.qrClientName.replace(/[^a-z0-9]/gi, '_')}_qr_code.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }
-
-    copyConfigText() {
-        const configTextArea = document.getElementById('configText');
-        if (configTextArea) {
-            configTextArea.select();
-            configTextArea.setSelectionRange(0, 99999); // For mobile devices
-            
-            try {
-                navigator.clipboard.writeText(configTextArea.value).then(() => {
-                    ui.showTempMessage('Configuration copied to clipboard!', 'success');
-                }).catch(err => {
-                    // Fallback for older browsers
-                    document.execCommand('copy');
-                    ui.showTempMessage('Configuration copied to clipboard!', 'success');
-                });
-            } catch (err) {
-                document.execCommand('copy');
-                ui.showTempMessage('Configuration copied to clipboard!', 'success');
-            }
-        }
-    }
 
     copyToClipboard(text) {
         // Decode base64 text if it's the JSON data
@@ -1791,236 +1461,6 @@ class AmneziaApp {
             ui.showTempMessage('Failed to copy to clipboard', 'error');
         });
     }
-
-
-    createLogsSection() {
-        const mainContainer = document.querySelector('.container.mx-auto.p-4');
-        if (!mainContainer) return;
-        
-        const logsHtml = `
-            <div class="mt-8 bg-white rounded-lg shadow-md">
-                <div class="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
-                    onclick="amneziaApp.toggleLogsSection()">
-                    <h2 class="text-xl font-bold text-gray-800">📋 System Logs</h2>
-                    <button class="text-gray-600 hover:text-gray-800">
-                        <span id="logsToggleIcon">▼</span>
-                    </button>
-                </div>
-                <div id="logsContainer" class="hidden p-4 border-t border-gray-200">
-                    <div id="logTabs" class="mb-4">
-                        <!-- Tabs will be loaded here -->
-                    </div>
-                    <div id="logContent" class="mt-4">
-                        <!-- Log content will be displayed here -->
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        mainContainer.insertAdjacentHTML('beforeend', logsHtml);
-    }
-
-    toggleLogsSection() {
-        const container = ui.getElement('logsContainer');
-        const icon = ui.getElement('logsToggleIcon');
-        
-        if (container && icon) {
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                icon.textContent = '▲';
-                // Load logs when expanded
-                this.loadLogsList();
-            } else {
-                container.classList.add('hidden');
-                icon.textContent = '▼';
-            }
-        }
-    }
-
-    loadLogsList() {
-        api.getLogsList()
-            .then(logs => {
-                this.renderLogTabs(logs);
-            })
-            .catch(error => {
-                console.error('Error loading logs list:', error);
-                const tabsContainer = ui.getElement('logTabs');
-                if (tabsContainer) {
-                    tabsContainer.innerHTML = '<div class="text-red-500 p-4">Error loading logs</div>';
-                }
-            });
-    }
-
-    renderLogTabs(logs) {
-        const tabsContainer = ui.getElement('logTabs');
-        const contentContainer = ui.getElement('logContent');
-        
-        if (!tabsContainer || !contentContainer) return;
-        
-        if (logs.length === 0) {
-            tabsContainer.innerHTML = '<div class="text-gray-500 p-4">No log files available</div>';
-            contentContainer.innerHTML = '';
-            return;
-        }
-        
-        // Store logs data
-        this.availableLogs = logs;
-        
-        // Create tab buttons
-        tabsContainer.innerHTML = `
-            <div class="flex flex-wrap border-b border-gray-200">
-                ${logs.map((log, index) => `
-                    <button class="log-tab px-4 py-2 text-sm font-medium focus:outline-none transition-colors duration-200 ${index === 0 ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-                            data-log-index="${index}"
-                            onclick="amneziaApp.switchLogTab(${index})">
-                        ${ui.escapeHtml(log.name)}
-                        <span class="ml-1 text-xs text-gray-400">(${log.size_human})</span>
-                    </button>
-                `).join('')}
-                <div class="flex-1"></div>
-                <div class="flex space-x-2">
-                    <button onclick="amneziaApp.reloadCurrentLog()"
-                            class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 flex items-center">
-                        🔄 Reload
-                    </button>
-                    <button onclick="amneziaApp.downloadCurrentLog()"
-                            class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200 flex items-center">
-                        💾 Download
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Load first log by default
-        if (logs.length > 0) {
-            this.currentLogIndex = 0;
-            this.loadLogContent(logs[0].path);
-        }
-    }
-
-    switchLogTab(index) {
-        if (!this.availableLogs || index >= this.availableLogs.length) return;
-        
-        this.currentLogIndex = index;
-        const log = this.availableLogs[index];
-        
-        // Update tab styling
-        const tabs = document.querySelectorAll('.log-tab');
-        tabs.forEach((tab, i) => {
-            if (i === index) {
-                tab.classList.add('border-b-2', 'border-blue-500', 'text-blue-600');
-                tab.classList.remove('text-gray-500', 'hover:text-gray-700');
-            } else {
-                tab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-600');
-                tab.classList.add('text-gray-500', 'hover:text-gray-700');
-            }
-        });
-        
-        // Load content
-        this.loadLogContent(log.path);
-    }
-
-    loadLogContent(logPath) {
-        const contentContainer = ui.getElement('logContent');
-        if (!contentContainer) return;
-        
-        // Show loading indicator
-        contentContainer.innerHTML = `
-            <div class="flex justify-center items-center h-64">
-                <div class="text-gray-500">Loading logs...</div>
-            </div>
-        `;
-        
-        api.getLogContent(logPath, 100)
-            .then(data => {
-                if (data.error) {
-                    contentContainer.innerHTML = `<div class="text-red-500 p-4">Error: ${data.error}</div>`;
-                    return;
-                }
-                
-                // Get current log type
-                const logType = this.availableLogs[this.currentLogIndex].type;
-                
-                // Format log lines with syntax highlighting
-                const formattedLines = this.formatLogLines(data.lines, logType);
-                
-                contentContainer.innerHTML = `
-                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-                        <div class="text-xs text-gray-400 mb-2 pb-2 border-b border-gray-700">
-                            📄 Showing last ${data.line_count} of ${data.total_lines} lines
-                        </div>
-                        <pre class="font-mono text-xs leading-relaxed log-lines" style="white-space: pre-wrap; word-wrap: break-word;">${formattedLines}</pre>
-                    </div>
-                `;
-            })
-            .catch(error => {
-                console.error('Error loading log content:', error);
-                contentContainer.innerHTML = `<div class="text-red-500 p-4">Error loading log content: ${error.message}</div>`;
-            });
-    }
-
-    formatLogLines(logText, logType) {
-        const lines = logText.split('\n');
-        const formattedLines = [];
-        
-        for (let line of lines) {
-            if (!line.trim()) {
-                formattedLines.push('');
-                continue;
-            }
-            
-            let formattedLine = ui.escapeHtml(line);
-            
-            // Color coding based on log type
-            if (logType === 'error') {
-                formattedLine = formattedLine
-                    .replace(/error/gi, '<span class="text-red-400">$&</span>')
-                    .replace(/fatal/gi, '<span class="text-red-600 font-bold">$&</span>')
-                    .replace(/warning/gi, '<span class="text-yellow-400">$&</span>')
-                    .replace(/critical/gi, '<span class="text-red-500 font-bold">$&</span>');
-            } else if (logType === 'access') {
-                // Highlight HTTP status codes
-                formattedLine = formattedLine
-                    .replace(/\b(200|201|204)\b/g, '<span class="text-green-400">$&</span>')
-                    .replace(/\b(301|302|304)\b/g, '<span class="text-blue-400">$&</span>')
-                    .replace(/\b(400|401|403|404|405)\b/g, '<span class="text-yellow-400">$&</span>')
-                    .replace(/\b(500|502|503|504)\b/g, '<span class="text-red-400">$&</span>');
-            } else {
-                // General log highlighting
-                formattedLine = formattedLine
-                    .replace(/ERROR/gi, '<span class="text-red-400">$&</span>')
-                    .replace(/WARNING/gi, '<span class="text-yellow-400">$&</span>')
-                    .replace(/INFO/gi, '<span class="text-blue-400">$&</span>')
-                    .replace(/DEBUG/gi, '<span class="text-gray-400">$&</span>');
-            }
-            
-            // Highlight IP addresses
-            formattedLine = formattedLine.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '<span class="text-cyan-400">$&</span>');
-            
-            // Highlight timestamps (common formats)
-            formattedLine = formattedLine.replace(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/g, '<span class="text-purple-400">$&</span>');
-            formattedLine = formattedLine.replace(/\d{2}\/[a-zA-Z]{3}\/\d{4}:\d{2}:\d{2}:\d{2}/g, '<span class="text-purple-400">$&</span>');
-            
-            formattedLines.push(formattedLine);
-        }
-        
-        return formattedLines.join('\n');
-    }
-
-
-    reloadCurrentLog() {
-        if (this.availableLogs && this.currentLogIndex !== undefined) {
-            const log = this.availableLogs[this.currentLogIndex];
-            this.loadLogContent(log.path);
-        }
-    }
-
-    downloadCurrentLog() {
-        if (this.availableLogs && this.currentLogIndex !== undefined) {
-            const log = this.availableLogs[this.currentLogIndex];
-            api.downloadLog(log.path);
-        }
-    }
 }
 
 // Initialize the application
@@ -2031,29 +1471,34 @@ window.amneziaApp = {
     startServer: server.startServer,
     stopServer: server.stopServer,
 
+     // Из client.js
+    addClient: client.addClient,
+    editClient: client.editClient,
+    deleteClient: client.deleteClient,
+    suspendClient: client.suspendClient,
+    activateClient: client.activateClient,
+    downloadClientConfig: client.downloadClientConfig,
+    showClientQRCode: client.showClientQRCode,
+    closeQRModal: client.closeQRModal,
+    saveClient: client.saveClient,
+    closeClientModal: client.closeClientModal,
+    toggleConfigView: client.toggleConfigView,
+    copyConfigText: client.copyConfigText,
+    downloadQRCode: client.downloadQRCode,
+
+    // Логи
+    toggleLogsSection: () => logs.toggleLogsSection(),
+    reloadCurrentLog: () => logs.reloadCurrentLog(),
+    downloadCurrentLog: () => logs.downloadCurrentLog(),
+    switchLogTab: (index) => logs.switchLogTab(index),
+
     // Из main.js (оставшиеся методы)
-    addClient: (serverId) => app.addClient(serverId),
-    editClient: (serverId, clientId) => app.editClient(serverId, clientId),
-    deleteClient: (serverId, clientId) => app.deleteClient(serverId, clientId),
-    suspendClient: (serverId, clientId) => app.suspendClient(serverId, clientId),
-    activateClient: (serverId, clientId) => app.activateClient(serverId, clientId),
-    downloadClientConfig: (serverId, clientId) => app.downloadClientConfig(serverId, clientId),
-    showClientQRCode: (serverId, clientId, clientName) => app.showClientQRCode(serverId, clientId, clientName),
-    closeQRModal: () => app.closeQRModal(),
-    saveClient: () => app.saveClient(),
-    closeClientModal: () => app.closeClientModal(),
-    toggleConfigView: () => app.toggleConfigView(),
-    copyConfigText: () => app.copyConfigText(),
-    downloadQRCode: () => app.downloadQRCode(),
     showServerConfig: (serverId) => app.showServerConfig(serverId),
     showRawServerConfig: (serverId) => app.showRawServerConfig(serverId),
     downloadServerConfig: (serverId) => app.downloadServerConfig(serverId),
     closeModal: () => app.closeModal(),
     copyToClipboard: (text) => app.copyToClipboard(text),
-    toggleLogsSection: () => app.toggleLogsSection(),
-    reloadCurrentLog: () => app.reloadCurrentLog(),
-    downloadCurrentLog: () => app.downloadCurrentLog(),
-    switchLogTab: (index) => app.switchLogTab(index),
+
     createServer: () => app.createServer(),
     refreshPublicIp: () => app.refreshPublicIp(),
     toggleForm: () => app.toggleForm(),
