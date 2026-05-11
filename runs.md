@@ -14,7 +14,7 @@ docker run -d \
   -v /opt/amneziawg-ui:/etc/amnezia \
   -v /opt/amneziawg-ui/certs:/app/certs \
   -e ADMIN_USERNAME=user \
-  -e ADMIN_PASSWORD_HASH='$2b$12$ePJa8CpQ2T2h2ISjqNeec.ARH7kK/VyIpf6KhPhMgSDRwM.r2mmxa' \
+  -e ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2' \
   -e DEFAULT_MTU=1420 \
   -e DEFAULT_SUBNET=192.168.99.0/24 \
   -e DEFAULT_PORT=51820 \
