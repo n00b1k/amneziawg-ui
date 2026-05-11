@@ -43,6 +43,8 @@ class AmneziaManager:
             # Try multiple services in case one fails
             services = [
                 'http://ifconfig.me',
+                'http://ifconfig.co',
+                'http://ip.me',
                 'https://api.ipify.org',
                 'https://ident.me'
             ]

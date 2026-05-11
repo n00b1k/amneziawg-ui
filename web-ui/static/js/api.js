@@ -309,3 +309,16 @@ export async function getAllServersTraffic() {
     if (!response.ok) return {};
     return response.json();
 }
+
+export async function updateServerName(serverId, newName) {
+    const response = await fetch(`/api/servers/${serverId}/name`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to rename server');
+    }
+    return response.json();
+}

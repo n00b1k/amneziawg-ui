@@ -571,3 +571,79 @@ def register_routes(app, amnezia_manager):
             return redirect(url_for('login'))
         
         return render_template('change_password.html', version=APP_VERSION)
+    
+
+    @app.route('/api/servers/<server_id>/clients/<client_id>/name', methods=['PUT'])
+    @login_required
+    def update_client_name(server_id, client_id):
+        data = request.json
+        new_name = data.get('name', '').strip()
+        if not new_name:
+            return jsonify({"error": "Name is required"}), 400
+
+        server = next((s for s in amnezia_manager.config['servers'] if s['id'] == server_id), None)
+        if not server:
+            return jsonify({"error": "Server not found"}), 404
+
+        client = next((c for c in server['clients'] if c['id'] == client_id), None)
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
+
+        old_name = client['name']
+        client['name'] = new_name
+
+        # Обновляем в глобальном словаре clients
+        if client_id in amnezia_manager.config['clients']:
+            amnezia_manager.config['clients'][client_id]['name'] = new_name
+
+        # Переименовываем комментарий в секции [Peer] в конфиг-файле сервера
+        # (просто заменяем строку "# Client: old_name" на "# Client: new_name")
+        config_path = server['config_path']
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                lines = f.readlines()
+            with open(config_path, 'w') as f:
+                for line in lines:
+                    if line.strip().startswith('# Client:') and old_name in line:
+                        f.write(f"# Client: {new_name}\n")
+                    else:
+                        f.write(line)
+
+        amnezia_manager.save_config()
+        return jsonify({"status": "updated", "name": new_name})
+    
+    @app.route('/api/servers/<server_id>/name', methods=['PUT'])
+    @login_required
+    def update_server_name(server_id):
+        data = request.json
+        new_name = data.get('name', '').strip()
+        if not new_name:
+            return jsonify({"error": "Name is required"}), 400
+
+        server = next((s for s in amnezia_manager.config['servers'] if s['id'] == server_id), None)
+        if not server:
+            return jsonify({"error": "Server not found"}), 404
+
+        old_name = server['name']
+        server['name'] = new_name
+
+        # Обновляем имя сервера в глобальных клиентах (для отображения в списке клиентов)
+        for client_id, client in amnezia_manager.config['clients'].items():
+            if client.get('server_id') == server_id:
+                client['server_name'] = new_name
+
+        # Переименовываем в конфиг-файле сервера (комментарии, если есть)
+        # Обычно в конфиге WireGuard нет имени сервера, но можно обновить комментарий в начале файла (если он был добавлен)
+        config_path = server['config_path']
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                lines = f.readlines()
+            with open(config_path, 'w') as f:
+                for line in lines:
+                    if line.strip().startswith('# Server:'):
+                        f.write(f"# Server: {new_name}\n")
+                    else:
+                        f.write(line)
+
+        amnezia_manager.save_config()
+        return jsonify({"status": "updated", "name": new_name})

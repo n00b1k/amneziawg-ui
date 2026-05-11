@@ -4,7 +4,7 @@ import * as api from './api.js';
 import { loadServers } from './server.js'; // для обновления списка после изменений
 
 // Вспомогательные переменные для QR-кода
-let currentQRServerId, currentQRClientId, currentQRClientName;
+let currentQRServerId, currentQRClientId, currentQRClientName, currentEditingClientName;
 let currentCleanConfig = '', currentFullConfig = '', currentConfigType = 'clean';
 
 // ----- Модальные окна клиентов -----
@@ -227,6 +227,7 @@ async function showClientModal(serverId, client = null) {
     const clientName = client ? client.name : '';
     const applyISettings = client ? (client.apply_i_settings || false) : false;
     const iSettings = client ? (client.i_settings || {}) : {};
+    currentEditingClientName = clientName
 
     let serverInfo = null;
     try {
@@ -266,7 +267,7 @@ async function showClientModal(serverId, client = null) {
                         <input type="hidden" id="clientId" value="${client ? client.id : ''}">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Client Name</label>
-                            <input type="text" id="clientName" value="${escapeHtml(clientName)}" required ${isEdit ? 'readonly class="bg-gray-100 cursor-not-allowed w-full px-4 py-3 border-2 rounded-xl"' : 'class="w-full px-4 py-3 border-2 rounded-xl"'}>
+                            <input type="text" id="clientName" value="${escapeHtml(clientName)}" required class="w-full px-4 py-3 border-2 rounded-xl"}>
                         </div>
                         ${isEdit ? `<div class="pt-4 border-t"><label class="block text-sm font-medium text-gray-700">Auto-suspend at</label><input type="datetime-local" id="suspendAt" value="${suspendAtValue}" class="w-full px-4 py-3 border-2 rounded-xl"><p class="text-xs text-gray-500 mt-1">Leave empty to disable auto-suspension.</p></div>` : ''}
                         <div class="pt-4 border-t">
@@ -324,6 +325,14 @@ export async function saveClient() {
             if (val) iSettings[`i${i}`] = val;
         }
         data.i_settings = iSettings;
+    }
+
+    if (clientName !== currentEditingClientName) {
+        await fetch(`/api/servers/${serverId}/clients/${clientId}/name`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: clientName })
+        });
     }
 
     try {

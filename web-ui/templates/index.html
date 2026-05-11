@@ -20,13 +20,25 @@
 
         <!-- Выпадающий список профиля -->
         <div class="relative">
-          <button id="profileButton" class="bg-blue-500 text-white border border-white-300 px-4 py-2 rounded text-sm font-medium transition duration-200 flex items-center space-x-2 shadow-sm">
-            <div class="w-5 h-5 rounded-full bg-white flex items-center justify-center">
-              <span class="text-blue-500 text-xs font-bold">{{ current_user.username[0].upper() if current_user.username else 'U' }}</span>
-            </div>
+          <button id="profileButton" class="bg-purple-500 text-white border border-white-300 px-4 py-2 rounded text-sm font-medium transition duration-200 flex items-center space-x-2 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-user-icon lucide-user"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
             <span>{{ current_user.username if current_user.username else 'User' }}</span>
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            <svg class="w-6 h-6 ml-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
 

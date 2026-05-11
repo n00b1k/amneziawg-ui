@@ -23,7 +23,7 @@ All server configuration is done via web interface or via API endpoints.
 
 ## Docker Deployment
 
-Official docker image repository: https://hub.docker.com/r/n00b1k/awg-web-ui
+Official docker image repository: https://hub.docker.com/r/n00b1k/amneziawg-ui
 
 ### Environment Variables
 
@@ -40,16 +40,16 @@ Official docker image repository: https://hub.docker.com/r/n00b1k/awg-web-ui
 ### Docker Run Example
 
 ```bash
-docker run --rm n00b1k/awg-web-ui:1.3.8 gph 'password'
+docker run --rm n00b1k/amneziawg-ui:latest gph 'password'
 ```
 
 ```bash
 docker run -d \
-  --name awg-web-ui \
+  --name amneziawg-ui \
   -p 5000:5000 \
   -p 51820:51820/udp \
-  -v /opt/awg-web-ui:/etc/amnezia \
-  -v /opt/awg-web-ui/certs:/app/certs \
+  -v /opt/amneziawg-ui:/etc/amnezia \
+  -v /opt/amneziawg-ui/certs:/app/certs \
   -e ADMIN_USERNAME=user \
   -e ADMIN_PASSWORD_HASH='$2b$12$ePJa8CpQ2T2h2ISjqNeec.ARH7kK/VyIpf6KhPhMgSDRwM.r2mmxa' \
   -e DEFAULT_MTU=1420 \
@@ -62,7 +62,7 @@ docker run -d \
   --sysctl net.ipv4.conf.all.src_valid_mark=1 \
   --device /dev/net/tun \
   --restart unless-stopped \
-  n00b1k/awg-web-ui:1.3.8
+  n00b1k/amneziawg-ui:latest
 ```
 
 ## Protection by IP address

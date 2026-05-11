@@ -23,6 +23,7 @@ class AmneziaApp {
             server.setRefreshClientsCallback((serverId) => {
                 client.loadServerClients(serverId);
             });
+            server.initRenameServer();
             logs.createLogsSection();
         });
     }

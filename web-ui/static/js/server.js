@@ -35,7 +35,14 @@ function renderServers(servers) {
         <div class="bg-white rounded-lg shadow-md p-6" data-server-id="${server.id}">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h3 class="text-lg font-semibold">${escapeHtml(server.name)}</h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-semibold server-name-display" data-server-id="${server.id}">${escapeHtml(server.name)}</h3>
+                        <button class="edit-server-name-btn text-gray-500 hover:text-blue-500" data-server-id="${server.id}" title="Rename server">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                    </div>
                     <p class="text-sm text-gray-600">
                         ID: ${server.id} | Port: ${server.port} | Subnet: ${server.subnet}
                         ${server.obfuscation_enabled ? '| 🔒 Obfuscated' : ''}
@@ -159,4 +166,58 @@ export function updateServerTrafficElement(serverId, trafficData) {
             trafficElement.title = `Interface RX: ${trafficData.rx}, TX: ${trafficData.tx}`;
         }
     }
+}
+
+
+export function initRenameServer() {
+    document.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-server-name-btn');
+        if (!editBtn) return;
+        const serverId = editBtn.dataset.serverId;
+        const displaySpan = document.querySelector(`.server-name-display[data-server-id="${serverId}"]`);
+        if (!displaySpan) return;
+        const oldName = displaySpan.innerText;
+
+        // Заменяем текст на поле ввода
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldName;
+        input.className = 'text-lg font-semibold border border-gray-300 rounded px-2 py-1';
+        displaySpan.replaceWith(input);
+        input.focus();
+
+        const saveRename = async () => {
+            const newName = input.value.trim();
+            if (newName && newName !== oldName) {
+                try {
+                    await api.updateServerName(serverId, newName);
+                    showTempMessage('Server renamed successfully', 'success');
+                    await loadServers(); // перезагружаем список
+                } catch (err) {
+                    showTempMessage('Rename failed: ' + err.message, 'error');
+                    // восстанавливаем старый текст
+                    const newSpan = document.createElement('h3');
+                    newSpan.className = 'text-lg font-semibold server-name-display';
+                    newSpan.setAttribute('data-server-id', serverId);
+                    newSpan.innerText = oldName;
+                    input.replaceWith(newSpan);
+                }
+            } else {
+                // отмена – возвращаем текст без изменений
+                const newSpan = document.createElement('h3');
+                newSpan.className = 'text-lg font-semibold server-name-display';
+                newSpan.setAttribute('data-server-id', serverId);
+                newSpan.innerText = oldName;
+                input.replaceWith(newSpan);
+            }
+        };
+
+        input.addEventListener('blur', saveRename);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveRename();
+            }
+        });
+    });
 }
