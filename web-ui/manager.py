@@ -15,9 +15,11 @@ from config import (
     ENABLE_OBFUSCATION, AUTO_START_SERVERS, DEFAULT_I1, DEFAULT_I2,
     DEFAULT_I3, DEFAULT_I4, DEFAULT_I5
 )
+#from app import logger
 
 class AmneziaManager:
-    def __init__(self, socketio_instance):
+    def __init__(self, socketio_instance, logger=None):
+        self.logger = logger
         self.socketio = socketio_instance
         self.config = self.load_config()
         self.ensure_directories()
@@ -56,11 +58,15 @@ class AmneziaManager:
                         ip = response.text.strip()
                         if self.is_valid_ip(ip):
                             print(f"Detected public IP: {ip}")
+                            if self.logger:
+                                self.logger.info(f"Detected public IP: {ip}")
                             return ip
                 except:
                     continue
         except Exception as e:
             print(f"Failed to detect public IP: {e}")
+            if self.logger:
+                self.logger.info(f"Failed to detect public IP: {e}")
         return "YOUR_SERVER_IP"  # Fallback
 
     def is_valid_ip(self, ip):
@@ -84,6 +90,7 @@ class AmneziaManager:
                 current_status = self.get_server_status(server['id'])
                 if current_status == 'stopped' and server.get('auto_start', True):
                     print(f"Auto-starting server: {server['name']}")
+                    self.logger.info(f"Auto-starting server: {server['name']}")
                     self.start_server(server['id'])
 
     def load_config(self):
@@ -281,6 +288,9 @@ H4 = {obfuscation_params['H4']}
         self.config["servers"].append(server_config)
         self.save_config()
 
+        if self.logger:
+            self.logger.info(f"Server created: '{server_name}' (ID: {server_id})")
+
         # Auto-start if enabled (from environment or request)
         if auto_start:
             print(f"Auto-starting new server: {server_name}")
@@ -345,6 +355,8 @@ H4 = {obfuscation_params['H4']}
         if not server:
             return False
 
+        server_name = server['name']
+
         # Stop the server if running
         if server['status'] == 'running':
             self.stop_server(server_id)
@@ -360,6 +372,10 @@ H4 = {obfuscation_params['H4']}
         # Remove the server
         self.config["servers"] = [s for s in self.config["servers"] if s["id"] != server_id]
         self.save_config()
+
+        if self.logger:
+            self.logger.info(f"Server deleted: '{server_name}' (ID: {server_id})")
+
         return True
 
     def add_wireguard_client(self, server_id, client_name, apply_i_settings=False, i_settings=None):
@@ -444,6 +460,10 @@ AllowedIPs = {client_ip}/32
         print(f"Client {client_config['name']} added")
 
         config_content = self.generate_wireguard_client_config(server, client_config, include_comments=True)
+
+        if self.logger:
+            self.logger.info(f"Client added: '{client_name}' (ID: {client_id}) to server '{server['name']}' (ID: {server_id})")
+
         return client_config, config_content
 
     def delete_client(self, server_id, client_id):
@@ -455,6 +475,8 @@ AllowedIPs = {client_ip}/32
         client = next((c for c in server["clients"] if c["id"] == client_id), None)
         if not client:
             return False
+
+        client_name = client['name']
 
         # Remove client from server's client list
         server["clients"] = [c for c in server["clients"] if c["id"] != client_id]
@@ -475,7 +497,8 @@ AllowedIPs = {client_ip}/32
             self.apply_live_config(server['interface'])
             
         print(f"Client {server['name']}:{client['name']} removed")
-
+        if self.logger:
+            self.logger.info(f"Client deleted: '{client_name}' (ID: {client_id}) from server '{server['name']}' (ID: {server_id})")
         return True
     
     def rewrite_server_conf_without_client(self, server, client):
@@ -689,6 +712,9 @@ PersistentKeepalive = 25
         if server['status'] == 'running':
             self.apply_live_config(server['interface'])
 
+        if self.logger:
+            self.logger.info(f"clientID={client_id} suspended")
+
         return True, "Client suspended successfully"
 
     def activate_client(self, server_id, client_id):
@@ -734,6 +760,9 @@ PersistentKeepalive = 25
         if server['status'] == 'running':
             self.apply_live_config(server['interface'])
 
+        if self.logger:
+            self.logger.info(f"clientID={client_id} active")
+                             
         return True, "Client activated successfully"
     
     def start_suspension_checker(self):
@@ -838,17 +867,25 @@ PersistentKeepalive = 25
                 self.save_config()
 
                 print(f"Server {server['name']} started successfully")
+                if self.logger:
+                    self.logger.info(f"Server {server['name']} started successfully")
                 if iptables_success:
                     print(f"iptables rules configured for {server['interface']}")
+                    self.logger.info(f"iptables rules configured for {server['interface']}")
                 else:
                     print(f"Warning: iptables setup may have failed for {server['interface']}")
-
+                    self.logger.info(f"Warning: iptables setup may have failed for {server['interface']}")
                 threading.Thread(target=self.simulate_server_operation, args=(server_id, 'running')).start()
                 return True
             else:
                 print(f"Failed to start server {server['name']}")
+                if self.logger:
+                    self.logger.info(f"Failed to start server {server['name']}")
         except Exception as e:
             print(f"Failed to start server {server_id}: {e}")
+            if self.logger:
+                self.logger.info(f"Failed to start server {server_id}: {e}")
+        
 
         return False
 
@@ -869,15 +906,22 @@ PersistentKeepalive = 25
                 self.save_config()
 
                 print(f"Server {server['name']} stopped successfully")
+                if self.logger:
+                    self.logger.info(f"Server {server['name']} stopped successfully")
                 if iptables_cleaned:
                     print(f"iptables rules cleaned up for {server['interface']}")
+                    self.logger.info(f"iptables rules cleaned up for {server['interface']}")
 
                 threading.Thread(target=self.simulate_server_operation, args=(server_id, 'stopped')).start()
                 return True
             else:
                 print(f"Failed to stop server {server['name']}")
+                if self.logger:
+                    self.logger.info(f"Failed to stop server {server['name']}")
         except Exception as e:
             print(f"Failed to stop server {server_id}: {e}")
+            if self.logger:
+                self.logger.info(f"Failed to stop server {server_id}: {e}")
 
         return False
 
@@ -1157,23 +1201,6 @@ PersistentKeepalive = 25
             os.makedirs(CONFIG_DIR, exist_ok=True)
             os.makedirs(WIREGUARD_CONFIG_DIR, exist_ok=True)
             os.makedirs('/var/log/amnezia', exist_ok=True)
-
-        def detect_public_ip(self):
-            try:
-                services = ['http://ifconfig.me', 'https://api.ipify.org', 'https://ident.me']
-                for service in services:
-                    try:
-                        response = requests.get(service, timeout=5)
-                        if response.status_code == 200:
-                            ip = response.text.strip()
-                            if self.is_valid_ip(ip):
-                                print(f"Detected public IP: {ip}")
-                                return ip
-                    except:
-                        continue
-            except Exception as e:
-                print(f"Failed to detect public IP: {e}")
-            return "YOUR_SERVER_IP"
 
         def is_valid_ip(self, ip):
             try:

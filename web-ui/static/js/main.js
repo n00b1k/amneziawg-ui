@@ -524,9 +524,9 @@ class AmneziaApp {
             name: nameElement ? nameElement.value.trim() : 'New Server',
             public_ip: publicIpElement ? publicIpElement.value.trim() : '',
             port: portElement ? parseInt(portElement.value) : 51820,
-            subnet: subnetElement ? subnetElement.value : '10.0.0.0/24',
+            subnet: subnetElement ? subnetElement.value : '192.168.99.0/24',
             mtu: mtuElement ? parseInt(mtuElement.value) : 1420,
-            dns: dnsElement ? dnsElement.value.trim() : '8.8.8.8,1.1.1.1',
+            dns: dnsElement ? dnsElement.value.trim() : '1.1.1.1,9.9.9.9',
             obfuscation: obfuscationElement ? obfuscationElement.checked : true,
             awg2: awg2Element ? awg2Element.checked : true,
             auto_start: autoStartElement ? autoStartElement.checked : true

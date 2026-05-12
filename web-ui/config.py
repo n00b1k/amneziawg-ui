@@ -1,6 +1,6 @@
 import os
 
-APP_VERSION = '3.16'
+APP_VERSION = '3.17'
 
 # Get the absolute path to the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -9,10 +9,10 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 # Essential environment variables
 AUTO_START_SERVERS = os.getenv('AUTO_START_SERVERS', 'true').lower() == 'true'
-DEFAULT_MTU = int(os.getenv('DEFAULT_MTU', '1280'))
-DEFAULT_SUBNET = os.getenv('DEFAULT_SUBNET', '10.0.0.0/24')
+DEFAULT_MTU = int(os.getenv('DEFAULT_MTU', '1420'))
+DEFAULT_SUBNET = os.getenv('DEFAULT_SUBNET', '192.168.99.0/24')
 DEFAULT_PORT = int(os.getenv('DEFAULT_PORT', '51820'))
-DEFAULT_DNS = os.getenv('DEFAULT_DNS', '8.8.8.8,1.1.1.1')
+DEFAULT_DNS = os.getenv('DEFAULT_DNS', '1.1.1.1,9.9.9.9')
 FLASK_PORT = int(os.getenv('FLASK_PORT', '5000'))
 PRODUCTION = os.getenv('PRODUCTION', 'false').lower() == 'true'
 
@@ -23,7 +23,7 @@ DNS_SERVERS = [dns.strip() for dns in DEFAULT_DNS.split(',') if dns.strip()]
 CONFIG_DIR = '/etc/amnezia'
 WIREGUARD_CONFIG_DIR = os.path.join(CONFIG_DIR, 'amneziawg')
 CONFIG_FILE = os.path.join(CONFIG_DIR, 'web_config.json')
-PUBLIC_IP_SERVICE = 'http://ifconfig.me'
+PUBLIC_IP_SERVICE = 'http://ifconfig.co'
 ENABLE_OBFUSCATION = True
 
 # SSL settings

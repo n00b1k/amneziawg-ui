@@ -29,7 +29,9 @@ function getLogsHtml() {
     return `
         <div class="mt-8 bg-white rounded-lg shadow-md">
             <div class="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50" id="logsHeader">
-                <h2 class="text-xl font-bold text-gray-800">📋 System Logs</h2>
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scroll-text-icon lucide-scroll-text"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></svg>
+                <span>System Logs</span></h2>
                 <button class="text-gray-600 hover:text-gray-800">
                     <span id="logsToggleIcon">▼</span>
                 </button>
@@ -90,9 +92,19 @@ function renderLogTabs(logs) {
                 </button>
             `).join('')}
             <div class="flex-1"></div>
-            <div class="flex space-x-2">
-                <button id="reloadLogBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">🔄 Reload</button>
-                <button id="downloadLogBtn" class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">💾 Download</button>
+            <div class="flex items-center gap-2">
+                <button id="reloadLogBtn" class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-800 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                    </svg>
+                    <span>Reload</span>
+                </button>
+                <button id="downloadLogBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-800 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Download</span>
+                </button>
             </div>
         </div>
     `;
@@ -145,7 +157,7 @@ async function loadLogContent(logPath) {
         contentContainer.innerHTML = `
             <div class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
                 <div class="text-xs text-gray-400 mb-2 pb-2 border-b border-gray-700">
-                    📄 Showing last ${data.line_count} of ${data.total_lines} lines
+                    Showing last ${data.line_count} of ${data.total_lines} lines
                 </div>
                 <pre class="font-mono text-xs leading-relaxed" style="white-space: pre-wrap; word-wrap: break-word;">${formattedLines}</pre>
             </div>

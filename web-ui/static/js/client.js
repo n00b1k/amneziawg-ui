@@ -391,6 +391,7 @@ function renderServerClients(serverId, clients, traffic = {}) {
                             <div>
                                 <div class="flex items-center space-x-2">
                                     <span class="font-medium">${escapeHtml(client.name)}</span>
+                                    <span class="text-sm text-gray-600">(id: ${client.id}) </span>
                                     <span class="text-sm text-gray-600">${client.client_ip}</span>
                                     ${hasISettings ? '<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">I-settings</span>' : ''}
                                     ${statusBadge}
@@ -403,21 +404,21 @@ function renderServerClients(serverId, clients, traffic = {}) {
                             </div>
                         </div>
                         <div class="flex space-x-2">
-                            <button onclick="window.amneziaApp.editClient('${serverId}', '${client.id}')" class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
+                            <button onclick="window.amneziaApp.editClient('${serverId}', '${client.id}')" class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-orange-800 flex items-center"
                                     title="Edit Client">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                                 Edit
                             </button>
-                            <button onclick="window.amneziaApp.showClientQRCode('${serverId}', '${client.id}', '${escapeHtml(client.name)}')" class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
+                            <button onclick="window.amneziaApp.showClientQRCode('${serverId}', '${client.id}', '${escapeHtml(client.name)}')" class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-purple-800 flex items-center"
                                     title="Show QR Code">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                                 </svg>
                                 QR Code
                             </button>
-                            <button onclick="window.amneziaApp.downloadClientConfig('${serverId}', '${client.id}')" class="bg-blue-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
+                            <button onclick="window.amneziaApp.downloadClientConfig('${serverId}', '${client.id}')" class="bg-blue-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-blue-800 flex items-center"
                                     title="Download Client Config">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -425,14 +426,14 @@ function renderServerClients(serverId, clients, traffic = {}) {
                                 Download
                             </button>
                             ${isSuspended ?
-                                `<button onclick="window.amneziaApp.activateClient('${serverId}', '${client.id}')" class="bg-green-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
+                                `<button onclick="window.amneziaApp.activateClient('${serverId}', '${client.id}')" class="bg-green-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-green-800 flex items-center"
                                         title="Activate Client">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-4 h-4 mr-1">
                                         <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
                                     </svg>
                                     Activate
                                 </button>` :
-                                `<button onclick="window.amneziaApp.suspendClient('${serverId}', '${client.id}')" class="bg-yellow-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center"
+                                `<button onclick="window.amneziaApp.suspendClient('${serverId}', '${client.id}')" class="bg-yellow-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-yellow-800 flex items-center"
                                         title="Suspend Client">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-4 h-4 mr-1">
                                         <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" />
@@ -440,7 +441,7 @@ function renderServerClients(serverId, clients, traffic = {}) {
                                     Suspend
                                 </button>`
                             }
-                            <button onclick="window.amneziaApp.deleteClient('${serverId}', '${client.id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center" title="Delete Client">
+                            <button onclick="window.amneziaApp.deleteClient('${serverId}', '${client.id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-red-800 flex items-center" title="Delete Client">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>

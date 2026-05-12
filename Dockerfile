@@ -37,10 +37,10 @@ RUN ln -s /app/web-ui/generate_password_hash.py /usr/local/bin/gph && chmod +x /
 # Переменные окружения
 ENV PRODUCTION=false \
     AUTO_START_SERVERS=true \
-    DEFAULT_MTU=1280 \
-    DEFAULT_SUBNET=10.0.0.0/24 \
+    DEFAULT_MTU=1420 \
+    DEFAULT_SUBNET=192.168.99.0/24 \
     DEFAULT_PORT=51820 \
-    DEFAULT_DNS="8.8.8.8,1.1.1.1"
+    DEFAULT_DNS="1.1.1.1,9.9.9.9"
 
 EXPOSE 5000
 

@@ -12,11 +12,14 @@ from utils import get_ssl_context, print_config_info
 from routes import register_routes
 from contextlib import contextmanager
 
+from logs import setup_logging
+
 app = Flask(__name__,
     template_folder=TEMPLATE_DIR,
     static_folder=STATIC_DIR
 )
 app.secret_key = os.urandom(24)
+logger = setup_logging(app)
 
 # Flask-Login
 login_manager = LoginManager()
@@ -42,7 +45,7 @@ socketio = SocketIO(
 
 # Initialize
 init_db()
-amnezia_manager = AmneziaManager(socketio)
+amnezia_manager = AmneziaManager(socketio, logger = logger)
 register_socket_events(socketio, amnezia_manager)
 
 # Register routes
@@ -106,14 +109,3 @@ if __name__ == '__main__':
         serve(app, host='0.0.0.0', port=FLASK_PORT, threads=4)
     else:
         app.run(host='0.0.0.0', port=FLASK_PORT, ssl_context=(cert_file, key_file), debug=False, threaded=True)
-
-@contextmanager
-def get_db():
-    """Контекстный менеджер для работы с БД"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()

@@ -8,7 +8,7 @@
     <script src="/static/cloudflare/socket.io.js"></script>
     <script src="/static/cloudflare/qrcode.min.js"></script>
     <!-- tailwindcss -->
-    <link rel="stylesheet" href="/static/css/output.css" />
+    <link rel="stylesheet" href="/static/css/tailwind.css" />
     <script type="module" src="/static/js/main.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   </head>
@@ -20,7 +20,10 @@
 
         <!-- Выпадающий список профиля -->
         <div class="relative">
-          <button id="profileButton" class="bg-purple-500 text-white border border-white-300 px-4 py-2 rounded text-sm font-medium transition duration-200 flex items-center space-x-2 shadow-sm">
+          <button
+            id="profileButton"
+            class="bg-purple-500 text-white border border-white-300 px-4 py-2 rounded text-sm font-medium transition duration-200 hover:bg-purple-800 flex items-center space-x-2 shadow-sm"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -75,7 +78,7 @@
               <span id="status" class="text-sm text-gray-600">Connecting...</span>
             </div>
           </div>
-          <button id="refreshIpBtn" class="bg-yellow-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:shadow-md flex items-center">
+          <button id="refreshIpBtn" class="bg-yellow-500 text-white px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-yellow-800 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-4 md:mr-2">
               <path
                 fill-rule="evenodd"
@@ -107,9 +110,9 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700">DNS Servers *</label>
-                <input type="text" id="serverDNS" value="8.8.8.8,1.1.1.1" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="8.8.8.8,1.1.1.1" required />
+                <input type="text" id="serverDNS" value="1.1.1.1,9.9.9.9" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="1.1.1.1,9.9.9.9" required />
                 <p id="dnsError" class="text-red-500 text-xs mt-1 hidden">Valid DNS servers required (comma-separated IPs)</p>
-                <p class="text-gray-500 text-xs mt-1">Comma-separated DNS server IPs (e.g., 8.8.8.8,1.1.1.1)</p>
+                <p class="text-gray-500 text-xs mt-1">Comma-separated DNS server IPs (e.g., 1.1.1.1,9.9.9.9)</p>
               </div>
             </div>
 
@@ -122,8 +125,8 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Subnet *</label>
-                <input type="text" id="serverSubnet" value="10.0.0.0/24" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="e.g., 10.0.0.0/24" required />
-                <p id="subnetError" class="text-red-500 text-xs mt-1 hidden">Valid subnet is required (e.g., 10.0.0.0/24)</p>
+                <input type="text" id="serverSubnet" value="192.168.99.0/24" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="e.g., 192.168.99.0/24" required />
+                <p id="subnetError" class="text-red-500 text-xs mt-1 hidden">Valid subnet is required (e.g., 192.168.99.0/24)</p>
               </div>
             </div>
 
