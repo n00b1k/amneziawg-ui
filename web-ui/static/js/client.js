@@ -96,15 +96,15 @@ export function showClientQRCode(serverId, clientId, clientName) {
                                 <p class="text-center text-sm text-gray-500">Scan with AmneziaWG / AmneziaVPN app</p>
                             </div>
                             <div class="mt-4 text-center">
-                                <button onclick="window.amneziaApp.downloadQRCode()" id="downloadQRBtn" class="bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow hover:shadow-lg">Download QR Code Image</button>
+                                <button onclick="window.amneziaApp.downloadQRCode()" id="downloadQRBtn" class="bg-blue-500 text-white px-5 py-2.5 rounded text-sm font-medium hover:bg-blue-800">Download QR Code Image</button>
                             </div>
                         </div>
                         <div class="lg:w-3/5">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-sm font-medium text-gray-700">Configuration preview</label>
                                 <div class="flex space-x-2">
-                                    <button onclick="window.amneziaApp.toggleConfigView()" class="text-blue-500 border border-blue-200 px-3 py-1.5 rounded">Toggle View</button>
-                                    <button onclick="window.amneziaApp.copyConfigText()" class="bg-blue-500 text-white px-4 py-1.5 rounded">Copy Config</button>
+                                    <button onclick="window.amneziaApp.toggleConfigView()" class="bg-yellow-500 text-white border px-3 py-1.5 rounded hover:bg-yellow-800">Toggle View</button>
+                                    <button onclick="window.amneziaApp.copyConfigText()" class="bg-blue-500 text-white px-4 py-1.5 rounded hover:bg-blue-800">Copy Config</button>
                                 </div>
                             </div>
                             <textarea id="configText" rows="12" class="w-full px-4 py-3 border-2 rounded-xl text-sm font-mono bg-gray-50" readonly placeholder="Loading configuration..."></textarea>
@@ -112,8 +112,8 @@ export function showClientQRCode(serverId, clientId, clientName) {
                         </div>
                     </div>
                     <div class="flex justify-end space-x-4 pt-6 border-t">
-                        <button onclick="window.amneziaApp.downloadClientConfig('${serverId}', '${clientId}')" class="bg-green-500 text-white px-6 py-3 rounded-xl text-sm font-medium">Download Config File (.conf)</button>
-                        <button onclick="window.amneziaApp.closeQRModal()" class="bg-gray-500 text-white px-6 py-3 rounded-xl">Close</button>
+                        <button onclick="window.amneziaApp.downloadClientConfig('${serverId}', '${clientId}')" class="bg-green-500 text-white px-6 py-3 rounded text-sm font-medium hover:bg-green-800">Download Config File (.conf)</button>
+                        <button onclick="window.amneziaApp.closeQRModal()" class="bg-gray-500 text-white px-6 py-3 rounded text-sm font-medium hover:bg-gray-800">Close</button>
                     </div>
                 </div>
             </div>
@@ -283,7 +283,7 @@ async function showClientModal(serverId, client = null) {
                             </div>
                         </div>
                         <div class="flex justify-end space-x-4 pt-6 border-t">
-                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded hover:bg-gray-600">Cancel</button>
+                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded hover:bg-gray-800">Cancel</button>
                             <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-800">${isEdit ? 'Update Client' : 'Add Client'}</button>
                         </div>
                     </form>
@@ -397,9 +397,9 @@ function renderServerClients(serverId, clients, traffic = {}) {
                                     ${statusBadge}
                                 </div>
                                 <div class="flex space-x-4 mt-1 text-xs text-gray-500">
-                                    <span class="client-traffic">🔽 ${clientData.received} &nbsp; 🔼 ${clientData.sent}</span>
-                                    <span class="client-handshake" title="${clientData.last_handshake}">🕒 ${clientData.last_handshake !== 'Never' ? clientData.last_handshake : 'Never'}</span>
-                                    <span class="client-endpoint ${!clientData.endpoint ? 'hidden' : ''}">🌐 ${escapeHtml(clientData.endpoint || '')}</span>
+                                    <span class="client-traffic"><svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-chevron-down-icon lucide-square-chevron-down"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m16 10-4 4-4-4"/></svg> ${clientData.received} &nbsp; <svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-chevron-up-icon lucide-square-chevron-up"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m8 14 4-4 4 4"/></svg> ${clientData.sent}</span>
+                                    <span class="client-handshake" title="${clientData.last_handshake}"><svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-icon lucide-clock"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ${clientData.last_handshake !== 'Never' ? clientData.last_handshake : 'Never'}</span>
+                                    <span class="client-endpoint ${!clientData.endpoint ? 'hidden' : ''}"><svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-right-ellipsis-icon lucide-chevrons-left-right-ellipsis"><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="m17 7 5 5-5 5"/><path d="m7 7-5 5 5 5"/><path d="M8 12h.01"/></svg> ${escapeHtml(clientData.endpoint || '')}</span>
                                 </div>
                             </div>
                         </div>

@@ -45,10 +45,10 @@ function renderServers(servers) {
                     </div>
                     <p class="text-sm text-gray-600">
                         ID: ${server.id} | Port: ${server.port} | Subnet: ${server.subnet}
-                        ${server.obfuscation_enabled ? '| 🔒 Obfuscated' : ''}
-                        ${server.public_ip ? `| 🌐 Public IP: ${server.public_ip}` : ''}
+                        ${server.obfuscation_enabled ? '| <svg class="inline-block w-3 h-3 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Obfuscated' : ''}
+                        ${server.public_ip ? `| <svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-right-ellipsis-icon lucide-chevrons-left-right-ellipsis"><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="m17 7 5 5-5 5"/><path d="m7 7-5 5 5 5"/><path d="M8 12h.01"/></svg> Public IP: ${server.public_ip}` : ''}
                     </p>
-                    <div class="server-interface-traffic text-xs text-gray-500 mt-1">📡 Loading interface traffic...</div>
+                    <div class="server-interface-traffic text-xs text-gray-500 mt-1"><svg class="inline-block w-4 h-4 align-middle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-satellite-dish-icon lucide-satellite-dish"><path d="M4 10a7.31 7.31 0 0 0 10 10Z"/><path d="m9 15 3-3"/><path d="M17 13a6 6 0 0 0-6-6"/><path d="M21 13A10 10 0 0 0 11 3"/></svg> Loading interface traffic...</div>
                 </div>
                 <div class="flex items-center space-x-2">
                     <span class="px-3 py-1 rounded-full text-sm ${server.status === 'running' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${server.status}</span>

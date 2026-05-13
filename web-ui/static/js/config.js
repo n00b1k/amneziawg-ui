@@ -133,11 +133,11 @@ function displayServerConfigModal(serverInfo) {
 
                     <div class="flex justify-end space-x-3 pt-4 border-t">
                         <button onclick="window.amneziaApp.showRawServerConfig('${serverInfo.id}')"
-                                class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">View Full Config</button>
+                                class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-800">View Full Config</button>
                         <button onclick="window.amneziaApp.downloadServerConfig('${serverInfo.id}')"
-                                class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">Download Config</button>
+                                class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-800">Download Config</button>
                         <button onclick="window.amneziaApp.closeModal()"
-                                class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600">Close</button>
+                                class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-800">Close</button>
                     </div>
                 </div>
             </div>

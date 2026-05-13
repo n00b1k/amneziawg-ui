@@ -637,24 +637,6 @@ class AmneziaApp {
     }
 
 
-    showClientModal(serverId, client = null) {
-        const modalTitle = client ? 'Edit Client' : 'Add New Client';
-        const clientName = client ? client.name : '';
-        const applyISettings = client ? (client.apply_i_settings || false) : false;
-        const iSettings = client ? (client.i_settings || {}) : {};
-        
-        // Get default I values from server info
-        api.getServerInfo(serverId)
-            .then(serverInfo => {
-                this.showClientModalWithDefaults(serverId, modalTitle, clientName, applyISettings, iSettings, serverInfo.default_i_settings || {}, client);
-            })
-            .catch(error => {
-                console.error('Error fetching server info:', error);
-                // Show modal without defaults if fetch fails
-                this.showClientModalWithDefaults(serverId, modalTitle, clientName, applyISettings, iSettings, {}, client);
-            });
-    }
-
     showClientModalWithDefaults(serverId, modalTitle, clientName, applyISettings, iSettings, defaultISettings, client) {
         // Determine if this is edit mode
         const isEditMode = !!client;
@@ -1000,55 +982,6 @@ class AmneziaApp {
                     `<strong>Config too large for QR code!</strong><br>
                     Configuration size: ${this.currentCleanConfig.length} characters (max: 2000).<br>
                     Please use "Download Config File" instead.`;
-            }
-        }
-    }
-
-    // Helper method to generate QR code
-    generateQRCode(qrWarning, qrContainer, qrCodeText, downloadQRBtn, qrDiv) {
-        // Show QR code section
-        if (qrWarning) qrWarning.classList.add('hidden');
-        if (qrContainer) qrContainer.classList.remove('hidden');
-        if (qrCodeText) qrCodeText.classList.remove('hidden');
-        if (downloadQRBtn) downloadQRBtn.classList.remove('hidden');
-        
-        // Clear previous QR code
-        if (qrDiv) {
-            qrDiv.innerHTML = '';
-            
-            try {
-                // Generate new QR code
-                new QRCode(qrDiv, {
-                    text: this.currentCleanConfig,
-                    width: 300,
-                    height: 300,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M,
-                    margin: 1
-                });
-                
-                console.log('QR code generated successfully');
-                
-            } catch (qrError) {
-                console.error('QR code generation error:', qrError);
-                
-                // Show error in warning box
-                if (qrWarning) {
-                    qrWarning.classList.remove('hidden');
-                    const warningText = qrWarning.querySelector('p');
-                    if (warningText) {
-                        warningText.innerHTML =
-                            `<strong>Failed to generate QR code!</strong><br>
-                            ${qrError.message}<br>
-                            Please use "Download Config File" instead.`;
-                    }
-                    
-                    // Hide QR code section again
-                    if (qrContainer) qrContainer.classList.add('hidden');
-                    if (qrCodeText) qrCodeText.classList.add('hidden');
-                    if (downloadQRBtn) downloadQRBtn.classList.add('hidden');
-                }
             }
         }
     }
