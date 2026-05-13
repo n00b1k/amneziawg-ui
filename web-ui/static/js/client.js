@@ -283,8 +283,8 @@ async function showClientModal(serverId, client = null) {
                             </div>
                         </div>
                         <div class="flex justify-end space-x-4 pt-6 border-t">
-                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded">Cancel</button>
-                            <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded">${isEdit ? 'Update Client' : 'Add Client'}</button>
+                            <button type="button" onclick="window.amneziaApp.closeClientModal()" class="bg-gray-500 text-white px-6 py-3 rounded hover:bg-gray-600">Cancel</button>
+                            <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-800">${isEdit ? 'Update Client' : 'Add Client'}</button>
                         </div>
                     </form>
                 </div>
