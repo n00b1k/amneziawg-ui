@@ -5,6 +5,7 @@ import * as server from './server.js';
 import * as client from './client.js';
 import * as logs from './logs.js';
 import * as config from './config.js';
+import * as form from './form.js';
 
 
 class AmneziaApp {
@@ -16,10 +17,8 @@ class AmneziaApp {
     init() {
         document.addEventListener('DOMContentLoaded', () => {
             console.log("AmneziaWG Web UI initializing...");
-            this.setupEventListeners();
             this.setupSocketIO();
             this.loadInitialData();
-            this.loadDefaultISettings();
             server.setRefreshClientsCallback((serverId) => {
                 client.loadServerClients(serverId);
             });
@@ -55,87 +54,6 @@ class AmneziaApp {
             }
         }
     }
-
-    setupEventListeners() {
-        // Server form submission
-        const serverForm = ui.getElement('serverForm');
-        if (serverForm) {
-            serverForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.createServer();
-            });
-        }
-
-        // Random parameters button
-        const randomParamsBtn = ui.getElement('randomParamsBtn');
-        if (randomParamsBtn) {
-            randomParamsBtn.addEventListener('click', () => {
-                this.generateRandomParams();
-            });
-        }
-
-        // Refresh IP button
-        const refreshIpBtn = ui.getElement('refreshIpBtn');
-        if (refreshIpBtn) {
-            refreshIpBtn.addEventListener('click', () => {
-                this.refreshPublicIp();
-            });
-        }
-
-        // Obfuscation toggle
-        const obfuscationCheckbox = ui.getElement('enableObfuscation');
-        if (obfuscationCheckbox) {
-            obfuscationCheckbox.addEventListener('change', (e) => {
-                this.toggleObfuscationParams(e.target.checked);
-            });
-            // Initialize visibility
-            this.toggleObfuscationParams(obfuscationCheckbox.checked);
-        }
-
-        const awg2Checkbox = ui.getElement('enableAwg2');
-        if (awg2Checkbox) {
-            awg2Checkbox.addEventListener('change', (e) => {
-                this.toggleAwg2Fields(e.target.checked);
-            });
-            this.toggleAwg2Fields(awg2Checkbox.checked);
-        }
-
-        // Form validation listeners
-        this.setupFormValidation();
-        
-        // Add toggle button listener
-        const toggleBtn = ui.getElement('toggleFormBtn');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                this.toggleForm();
-            });
-        }
-    }
-
-    setupFormValidation() {
-        const nameElement = ui.getElement('serverName');
-        const portElement = ui.getElement('serverPort');
-        const subnetElement = ui.getElement('serverSubnet');
-        
-        if (nameElement) {
-            nameElement.addEventListener('input', () => {
-                ui.hideError('nameError');
-            });
-        }
-        
-        if (portElement) {
-            portElement.addEventListener('input', () => {
-                ui.hideError('portError');
-            });
-        }
-        
-        if (subnetElement) {
-            subnetElement.addEventListener('input', () => {
-                ui.hideError('subnetError');
-            });
-        }
-    }
-
 
     toggleObfuscationParams(show) {
         const obfuscationParams = ui.getElement('obfuscationParams');
@@ -321,37 +239,6 @@ class AmneziaApp {
         } catch (error) { console.error(error); }
     }
 
-    generateRandomParams() {
-        // Generate random values within recommended ranges
-        const jcElement = ui.getElement('paramJc');
-        const s1Element = ui.getElement('paramS1');
-        const s2Element = ui.getElement('paramS2');
-        const s3Element = ui.getElement('paramS3');
-        const s4Element = ui.getElement('paramS4');
-        const h1Element = ui.getElement('paramH1');
-        const h2Element = ui.getElement('paramH2');
-        const h3Element = ui.getElement('paramH3');
-        const h4Element = ui.getElement('paramH4');
-        
-        if (jcElement) jcElement.value = Math.floor(Math.random() * 9) + 4; // 4-12
-        if (s1Element) s1Element.value = Math.floor(Math.random() * 136) + 15; // 15-150
-        if (s2Element) s2Element.value = Math.floor(Math.random() * 136) + 15; // 15-150
-        if (s3Element) s3Element.value = Math.floor(Math.random() * 256) + 1; // 1-256
-        if (s4Element) s4Element.value = Math.floor(Math.random() * 32) + 1; // 1-32
-        
-        // Generate unique H values
-        const hValues = new Set();
-        while (hValues.size < 4) {
-            hValues.add(Math.floor(Math.random() * 1000000) + 1000);
-        }
-        const hArray = Array.from(hValues);
-        
-        if (h1Element) h1Element.value = hArray[0];
-        if (h2Element) h2Element.value = hArray[1];
-        if (h3Element) h3Element.value = hArray[2];
-        if (h4Element) h4Element.value = hArray[3];
-    }
-
     showFormStatus(message, type) {
         const statusDiv = ui.getElement('formStatus');
         if (statusDiv) {
@@ -362,231 +249,6 @@ class AmneziaApp {
             setTimeout(() => {
                 statusDiv.classList.add('hidden');
             }, 5000);
-        }
-    }
-
-    validateObfuscationParamsJS(params, mtu) {
-        let errors = [];
-
-        // Jmin < Jmax ≤ mtu
-        if (!(params.Jmin < params.Jmax && params.Jmax <= mtu)) {
-            errors.push(`Jmin (${params.Jmin}) must be less than Jmax (${params.Jmax}), and Jmax ≤ MTU (${mtu})`);
-        }
-        // Jmax > Jmin < mtu
-        if (!(params.Jmax > params.Jmin && params.Jmin < mtu)) {
-            errors.push(`Jmax (${params.Jmax}) must be greater than Jmin (${params.Jmin}), and Jmin < MTU (${mtu})`);
-        }
-        // S1 ≤ (mtu - 148) and in the range from 15 to 150
-        if (!(params.S1 <= (mtu - 148) && params.S1 >= 15 && params.S1 <= 150)) {
-            errors.push(`S1 (${params.S1}) must be in [15, 150] and ≤ (MTU - 148) (${mtu - 148})`);
-        }
-        // S2 ≤ (mtu - 92) and in the range from 15 to 150
-        if (!(params.S2 <= (mtu - 92) && params.S2 >= 15 && params.S2 <= 150)) {
-            errors.push(`S2 (${params.S2}) must be in [15, 150] and ≤ (MTU - 92) (${mtu - 92})`);
-        }
-        // S1 + 56 ≠ S2
-        if (params.S1 + 56 === params.S2) {
-            errors.push(`S1 + 56 (${params.S1 + 56}) must not equal S2 (${params.S2})`);
-        }
-        if (params.S4 > 32) {
-            errors.push(`S4 (${params.S4}) must be in range [0, 32]`);
-        }
-
-        return errors;
-    }
-
-    validateForm() {
-        let isValid = true;
-
-        // Reset errors
-        ui.hideError('nameError');
-        ui.hideError('portError');
-        ui.hideError('subnetError');
-        ui.hideError('mtuError');
-        ui.hideError('dnsError');
-
-        // Validate name
-        const nameElement = ui.getElement('serverName');
-        const name = nameElement ? nameElement.value.trim() : '';
-        if (!name) {
-            ui.showError('nameError', 'Server name is required');
-            isValid = false;
-        }
-
-        // Validate port
-        const portElement = ui.getElement('serverPort');
-        const port = portElement ? parseInt(portElement.value) : 0;
-        if (!port || port < 1 || port > 65535) {
-            ui.showError('portError', 'Port must be between 1 and 65535');
-            isValid = false;
-        }
-
-        // Validate subnet
-        const subnetElement = ui.getElement('serverSubnet');
-        const subnet = subnetElement ? subnetElement.value : '';
-        const subnetRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
-        if (!subnet || !subnetRegex.test(subnet)) {
-            ui.showError('subnetError', 'Valid subnet is required (e.g., 10.0.0.0/24)');
-            isValid = false;
-        }
-
-        // Validate MTU
-        const mtuElement = ui.getElement('serverMTU');
-        const mtu = mtuElement ? parseInt(mtuElement.value) : 0;
-        if (!mtu || mtu < 1280 || mtu > 1440) {
-            ui.showError('mtuError', 'MTU must be between 1280 and 1440');
-            isValid = false;
-        }
-
-        // Validate DNS
-        const dnsElement = ui.getElement('serverDNS');
-        const dns = dnsElement ? dnsElement.value.trim() : '';
-        const dnsServers = dns.split(',').map(s => s.trim()).filter(s => s);
-        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-
-        if (!dns || dnsServers.length === 0) {
-            ui.showError('dnsError', 'At least one DNS server is required');
-            isValid = false;
-        } else {
-            for (const dnsServer of dnsServers) {
-                if (!ipRegex.test(dnsServer)) {
-                    ui.showError('dnsError', `Invalid DNS server IP: ${dnsServer}`);
-                    isValid = false;
-                    break;
-                }
-            }
-        }
-
-        return isValid;
-    }
-
-    // Add DNS input validation listener
-    setupFormValidation() {
-        const nameElement = ui.getElement('serverName');
-        const portElement = ui.getElement('serverPort');
-        const subnetElement = ui.getElement('serverSubnet');
-        const mtuElement = ui.getElement('serverMTU');
-        const dnsElement = ui.getElement('serverDNS');
-
-        if (nameElement) {
-            nameElement.addEventListener('input', () => {
-                ui.hideError('nameError');
-            });
-        }
-
-        if (portElement) {
-            portElement.addEventListener('input', () => {
-                ui.hideError('portError');
-            });
-        }
-
-        if (subnetElement) {
-            subnetElement.addEventListener('input', () => {
-                ui.hideError('subnetError');
-            });
-        }
-
-        if (mtuElement) {
-            mtuElement.addEventListener('input', () => {
-                ui.hideError('mtuError');
-            });
-        }
-
-        if (dnsElement) {
-            dnsElement.addEventListener('input', () => {
-                ui.hideError('dnsError');
-            });
-        }
-    }
-
-
-    async createServer() {
-        console.log("Creating server...");
-
-        if (!this.validateForm()) {
-            console.log("Form validation failed");
-            this.showFormStatus('Please fix the form errors above', 'error');
-            return;
-        }
-
-        // Safely get form values with fallbacks
-        const nameElement = ui.getElement('serverName');
-        const publicIpElement = ui.getElement('serverPublicIp');
-        const portElement = ui.getElement('serverPort');
-        const subnetElement = ui.getElement('serverSubnet');
-        const mtuElement = ui.getElement('serverMTU');
-        const dnsElement = ui.getElement('serverDNS');
-        const obfuscationElement = ui.getElement('enableObfuscation');
-        const awg2Element = ui.getElement('enableAwg2');
-        const autoStartElement = ui.getElement('autoStart');
-
-        const formData = {
-            name: nameElement ? nameElement.value.trim() : 'New Server',
-            public_ip: publicIpElement ? publicIpElement.value.trim() : '',
-            port: portElement ? parseInt(portElement.value) : 51820,
-            subnet: subnetElement ? subnetElement.value : '192.168.99.0/24',
-            mtu: mtuElement ? parseInt(mtuElement.value) : 1420,
-            dns: dnsElement ? dnsElement.value.trim() : '1.1.1.1,9.9.9.9',
-            obfuscation: obfuscationElement ? obfuscationElement.checked : true,
-            awg2: awg2Element ? awg2Element.checked : true,
-            auto_start: autoStartElement ? autoStartElement.checked : true
-        };
-
-        console.log("Form data:", formData);
-
-        // Add obfuscation parameters if enabled
-        if (formData.obfuscation) {
-            if (formData.obfuscation && formData.awg2) {
-                formData.obfuscation_params = {
-                    Jc: parseInt(ui.getElement('paramJc')?.value || '8'),
-                    Jmin: parseInt(ui.getElement('paramJmin')?.value || '8'),
-                    Jmax: parseInt(ui.getElement('paramJmax')?.value || '80'),
-                    S1: parseInt(ui.getElement('paramS1')?.value || '50'),
-                    S2: parseInt(ui.getElement('paramS2')?.value || '60'),
-                    S3: parseInt(ui.getElement('paramS3')?.value || '0'),
-                    S4: parseInt(ui.getElement('paramS4')?.value || '0'),
-                    // Handle H1-H4 as strings to support ranges
-                    H1: ui.getElement('paramH1')?.value || '1000',
-                    H2: ui.getElement('paramH2')?.value || '2000',
-                    H3: ui.getElement('paramH3')?.value || '3000',
-                    H4: ui.getElement('paramH4')?.value || '4000',
-                };
-            } else {
-                formData.obfuscation_params = {
-                    Jc: parseInt(ui.getElement('paramJc')?.value || '8'),
-                    Jmin: parseInt(ui.getElement('paramJmin')?.value || '8'),
-                    Jmax: parseInt(ui.getElement('paramJmax')?.value || '80'),
-                    S1: parseInt(ui.getElement('paramS1')?.value || '50'),
-                    S2: parseInt(ui.getElement('paramS2')?.value || '60'),
-                    // Handle H1-H4 as strings to support ranges
-                    H1: ui.getElement('paramH1')?.value || '1000',
-                    H2: ui.getElement('paramH2')?.value || '2000',
-                    H3: ui.getElement('paramH3')?.value || '3000',
-                    H4: ui.getElement('paramH4')?.value || '4000',
-                };
-            }
-
-            const obfErrors = this.validateObfuscationParamsJS(formData.obfuscation_params, formData.mtu);
-            if (obfErrors.length > 0) {
-                // You can display all errors in a single error element, or one by one
-                ui.showError('obfuscationError', obfErrors.join(' '));
-                return;
-            } else {
-                ui.hideError('obfuscationError');
-            }
-        }
-
-        // Disable button and show loading
-        this.setCreateButtonState(true);
-
-        try {
-            const newServer = await api.createServer(formData);
-            ui.showTempMessage(`Server "${newServer.name}" created!`, 'success');
-            const form = ui.getElement('serverForm');
-            if (form) form.reset();
-            await server.loadServers();
-        } catch (err) {
-            this.showFormStatus('Error creating server: ' + error.message, 'error');
         }
     }
 
@@ -840,39 +502,6 @@ class AmneziaApp {
         }
     }
 
-
-    loadDefaultISettings() {
-        api.getDefaults()
-        .then(data => {
-            // Установка значений в поля формы
-            const mtuInput = ui.getElement('serverMTU');
-            if (mtuInput && data.mtu) {
-                mtuInput.value = data.mtu;
-            }
-            
-            const subnetInput = ui.getElement('serverSubnet');
-            if (subnetInput && data.subnet) {
-                subnetInput.value = data.subnet;
-            }
-            
-            const portInput = ui.getElement('serverPort');
-            if (portInput && data.port) {
-                portInput.value = data.port;
-            }
-            
-            const dnsInput = ui.getElement('serverDNS');
-            if (dnsInput && data.dns) {
-                dnsInput.value = data.dns;
-            }
-            
-            console.log('Defaults loaded:', data);
-        })
-        .catch(error => {
-            console.error('Error loading defaults:', error);
-        });
-    }
-
-
     async fetchAndGenerateQRCode() {
         try {
             const configBothUrl = `/api/servers/${this.qrServerId}/clients/${this.qrClientId}/config-both`;
@@ -1030,9 +659,10 @@ window.amneziaApp = {
     closeModal: config.closeModal,
     copyToClipboard: config.copyToClipboard,
 
+    generateRandomParams: () => form.generateRandomParams(),
+
     createServer: () => app.createServer(),
     refreshPublicIp: () => app.refreshPublicIp(),
     toggleForm: () => app.toggleForm(),
-    generateRandomParams: () => app.generateRandomParams(),
     logout: () => app.logout()
 };

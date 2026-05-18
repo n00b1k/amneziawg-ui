@@ -2,7 +2,6 @@ import os
 import subprocess
 import tempfile
 import time
-import bcrypt
 from flask import request, jsonify, send_file, send_from_directory, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, logout_user
 
@@ -527,50 +526,6 @@ def register_routes(app, amnezia_manager):
             download_name=f"{filename}",
             mimetype="text/plain"
         )
-    
-
-    @app.route('/change-password', methods=['GET', 'POST'])
-    @login_required
-    def change_password():
-        if request.method == 'POST':
-            current_password = request.form.get('current_password')
-            new_password = request.form.get('new_password')
-            confirm_password = request.form.get('confirm_password')
-            
-            # Проверка длины нового пароля
-            if len(new_password) < 8:
-                flash('New password must be at least 8 characters long', 'error')
-                return render_template('change_password.html', version=APP_VERSION)
-            
-            # Проверка совпадения паролей
-            if new_password != confirm_password:
-                flash('New password and confirmation do not match', 'error')
-                return render_template('change_password.html', version=APP_VERSION)
-            
-            # Проверка текущего пароля
-            user, error = verify_password(current_user.username, current_password)
-            
-            if not user:
-                flash('Current password is incorrect', 'error')
-                return render_template('change_password.html', version=APP_VERSION)
-            
-            # Хеширование нового пароля
-            new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            
-            # Обновление пароля в БД
-            with get_db() as db:
-                db.execute(
-                    'UPDATE users SET password_hash = ? WHERE id = ?',
-                    (new_password_hash, current_user.id)
-                )
-            
-            flash('Password changed successfully! Please login again.', 'success')
-            
-            # Выход из системы
-            logout_user()
-            return redirect(url_for('login'))
-        
-        return render_template('change_password.html', version=APP_VERSION)
     
 
     @app.route('/api/servers/<server_id>/clients/<client_id>/name', methods=['PUT'])

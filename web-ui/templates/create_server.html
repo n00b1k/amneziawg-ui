@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Server - AmneziaWG Web UI</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <link rel="stylesheet" href="/static/css/tailwind.css" />
+    <script src="/static/cloudflare/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Create New VPN Server</h1>
+        <a href="/" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition">Cancel</a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <form id="serverForm" class="space-y-4">
+          <!-- Server Name + DNS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Server Name *</label>
+              <input type="text" id="serverName" value="amnezia" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              <p id="nameError" class="text-red-500 text-xs mt-1 hidden">Server name is required</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">DNS Servers *</label>
+              <input type="text" id="serverDNS" value="1.1.1.1,9.9.9.9" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              <p id="dnsError" class="text-red-500 text-xs mt-1 hidden">Valid DNS required</p>
+            </div>
+          </div>
+
+          <!-- Public IP + Subnet -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Public IP (Optional)</label>
+              <input type="text" id="serverPublicIp" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Leave empty for auto-detection" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Subnet *</label>
+              <input type="text" id="serverSubnet" value="10.0.0.0/24" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              <p id="subnetError" class="text-red-500 text-xs mt-1 hidden">Valid subnet required</p>
+            </div>
+          </div>
+
+          <!-- Port + MTU -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Port *</label>
+              <input type="number" id="serverPort" value="51820" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              <p id="portError" class="text-red-500 text-xs mt-1 hidden">Port 1-65535</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">MTU (1280-1440) *</label>
+              <input type="number" id="serverMTU" value="1420" min="1280" max="1440" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              <p id="mtuError" class="text-red-500 text-xs mt-1 hidden">MTU 1280-1440</p>
+            </div>
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="flex items-center">
+            <input type="checkbox" id="autoStart" checked class="mr-2" />
+            <label class="text-sm font-medium text-gray-700">Auto-start server on creation</label>
+          </div>
+          <div class="flex items-center">
+            <input type="checkbox" id="enableObfuscation" checked class="mr-2" />
+            <label class="text-sm font-medium text-gray-700">Enable Traffic Obfuscation</label>
+            <span class="mx-4"></span>
+            <input type="checkbox" id="enableAwg2" checked class="mr-2" />
+            <label class="text-sm font-medium text-gray-700">Enable AmneziaWG 2.0</label>
+          </div>
+
+          <!-- Obfuscation params -->
+          <div id="obfuscationParams" class="border rounded-lg p-4 bg-gray-50">
+            <h3 class="text-lg font-medium mb-3">Obfuscation Parameters</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><label class="block text-xs font-medium">Jc (4-12)</label><input type="number" id="paramJc" value="4" min="4" max="12" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">Jmin</label><input type="number" id="paramJmin" value="8" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">Jmax</label><input type="number" id="paramJmax" value="80" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">S1 (15-150)</label><input type="number" id="paramS1" value="50" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">S2 (15-150)</label><input type="number" id="paramS2" value="60" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div id="awg2FieldS3" style="display: none">
+                <label class="block text-xs font-medium">S3 (0-256)</label><input type="number" id="paramS3" value="0" class="mt-1 w-full border rounded px-2 py-1" />
+              </div>
+              <div id="awg2FieldS4" style="display: none">
+                <label class="block text-xs font-medium">S4 (0-32)</label><input type="number" id="paramS4" value="0" class="mt-1 w-full border rounded px-2 py-1" />
+              </div>
+              <div><label class="block text-xs font-medium">H1</label><input type="text" id="paramH1" value="1000" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">H2</label><input type="text" id="paramH2" value="2000" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">H3</label><input type="text" id="paramH3" value="3000" class="mt-1 w-full border rounded px-2 py-1" /></div>
+              <div><label class="block text-xs font-medium">H4</label><input type="text" id="paramH4" value="4000" class="mt-1 w-full border rounded px-2 py-1" /></div>
+            </div>
+            <button type="button" id="randomParamsBtn" class="mt-4 bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-800">Generate Random Parameters</button>
+          </div>
+          <div id="obfuscationError" class="text-red-600 text-xs mt-1 hidden"></div>
+
+          <div class="flex space-x-4 pt-4">
+            <button type="submit" id="createButton" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-800">Create Server</button>
+            <a href="/" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-800">Cancel</a>
+          </div>
+          <div id="formStatus" class="text-sm mt-2 hidden"></div>
+        </form>
+      </div>
+    </div>
+    <script type="module" src="/static/js/create_server.js"></script>
+  </body>
+</html>
