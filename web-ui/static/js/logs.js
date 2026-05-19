@@ -93,13 +93,13 @@ function renderLogTabs(logs) {
             `).join('')}
             <div class="flex-1"></div>
             <div class="flex items-center gap-2">
-                <button id="reloadLogBtn" class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-800 flex items-center gap-1">
+                <button id="reloadLogBtn" class="px-3 py-2 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-800 flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
                     </svg>
                     <span>Reload</span>
                 </button>
-                <button id="downloadLogBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-800 flex items-center gap-1">
+                <button id="downloadLogBtn" class="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-800 flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
