@@ -64,6 +64,8 @@ def setup_logging(app: Flask):
         status = response.status_code
         length = response.content_length or 0
         access_logger.info(f'{user} - - [{time.strftime("%d/%b/%Y:%H:%M:%S %z")}] "{method} {path}" {status} {length}')
+        if request.path in ('/health') and request.remote_addr == '127.0.0.1':
+            return response
         return response
 
     # Логируем старт приложения

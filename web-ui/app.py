@@ -155,6 +155,12 @@ def change_password():
     
     return render_template('change_password.html', version=APP_VERSION)
 
+
+@app.route('/health')
+def health():
+    return "OK", 200
+
+
 if __name__ == '__main__':
     print_config_info()
     cert_file, key_file = get_ssl_context(CERT_FILE, KEY_FILE)

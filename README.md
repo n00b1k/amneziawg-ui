@@ -29,12 +29,13 @@ Official docker image repository: https://hub.docker.com/r/n00b1k/amneziawg-ui
 
 | Variable              | Default           | Description                                                                                       |
 | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| `WEB_PORT`            | `5000`            | External port for web interface                                                                   |
 | `ADMIN_USERNAME`      | `-`               | Username for basic auth in the app                                                                |
 | `ADMIN_PASSWORD_HASH` | `-`               | Password for basic auth in the app                                                                |
-| `DEFAULT_MTU`         | `1280`            | Default MTU value for new servers. Effective only for api requests. For UI management set via UI. |
-| `DEFAULT_SUBNET`      | `10.0.0.0/24`     | Default subnet for new servers. Effective only for api requests. For UI management set via UI.    |
+| `DEFAULT_MTU`         | `1420`            | Default MTU value for new servers. Effective only for api requests. For UI management set via UI. |
+| `DEFAULT_SUBNET`      | `192.168.99.0/24` | Default subnet for new servers. Effective only for api requests. For UI management set via UI.    |
 | `DEFAULT_PORT`        | `51820`           | Default port for new servers. Effective only for api requests. For UI management set via UI.      |
-| `DEFAULT_DNS`         | `8.8.8.8,1.1.1.1` | Default DNS servers for clients. Effective only for api requests. For UI management set via UI.   |
+| `DEFAULT_DNS`         | `1.1.1.1,9.9.9.9` | Default DNS servers for clients. Effective only for api requests. For UI management set via UI.   |
 | `IP_LIST`             | `-`               | A list of IP addresses or IP ranges to allow connections from.                                    |
 
 ### Docker Run Example

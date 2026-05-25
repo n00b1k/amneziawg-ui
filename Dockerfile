@@ -44,8 +44,8 @@ ENV PRODUCTION=false \
 
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -k https://localhost:5000/login || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f -k https://localhost:5000/health || exit 1
 
 # Entrypoint для поддержки команды gph
 ENTRYPOINT ["app/scripts/entrypoint.sh"]
