@@ -13,6 +13,7 @@ docker run -d \
   -p 51820:51820/udp \
   -v /opt/amneziawg-ui:/etc/amnezia \
   -v /opt/amneziawg-ui/certs:/app/certs \
+  -v /opt/amneziawg-ui/logs:/var/log/amnezia \
   -e ADMIN_USERNAME=user \
   -e ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2' \
   -e DEFAULT_MTU=1420 \

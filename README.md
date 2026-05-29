@@ -36,7 +36,6 @@ Official docker image repository: https://hub.docker.com/r/n00b1k/amneziawg-ui
 | `DEFAULT_SUBNET`      | `192.168.99.0/24` | Default subnet for new servers. Effective only for api requests. For UI management set via UI.    |
 | `DEFAULT_PORT`        | `51820`           | Default port for new servers. Effective only for api requests. For UI management set via UI.      |
 | `DEFAULT_DNS`         | `1.1.1.1,9.9.9.9` | Default DNS servers for clients. Effective only for api requests. For UI management set via UI.   |
-| `IP_LIST`             | `-`               | A list of IP addresses or IP ranges to allow connections from.                                    |
 
 ### Docker Run Example
 
@@ -51,6 +50,7 @@ docker run -d \
   -p 51820:51820/udp \
   -v /opt/amneziawg-ui:/etc/amnezia \
   -v /opt/amneziawg-ui/certs:/app/certs \
+  -v /opt/amneziawg-ui/logs:/var/log/amnezia \
   -e ADMIN_USERNAME=user \
   -e ADMIN_PASSWORD_HASH='$2b$12$ePJa8CpQ2T2h2ISjqNeec.ARH7kK/VyIpf6KhPhMgSDRwM.r2mmxa' \
   -e DEFAULT_MTU=1420 \

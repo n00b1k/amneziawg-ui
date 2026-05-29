@@ -18,8 +18,33 @@ async function loadDefaultSettings() {
     }
 }
 
+async function loadExistingServers() {
+    const container = document.getElementById('existingServersTable');
+    if (!container) return;
+    try {
+        const servers = await api.getServers();
+        if (!servers || servers.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-4">No servers created yet.</div>';
+            return;
+        }
+        // Формируем таблицу 2 колонки
+        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        for (let i = 0; i < servers.length; i++) {
+            const s = servers[i];
+            const info = `${s.name} (${s.subnet}, port:${s.port})`;
+            html += `<div class="bg-gray-50 p-3 rounded shadow-sm text-sm">${ui.escapeHtml(info)}</div>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Failed to load existing servers:', err);
+        container.innerHTML = '<div class="text-red-500 text-center py-4">Failed to load servers.</div>';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDefaultSettings();
+    await loadExistingServers();
 
     const serverForm = ui.getElement('serverForm');
     if (serverForm) serverForm.addEventListener('submit', async (e) => {
