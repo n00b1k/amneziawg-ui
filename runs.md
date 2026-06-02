@@ -13,7 +13,7 @@ docker run -d \
   -p 51820:51820/udp \
   -v /opt/amneziawg-ui:/etc/amnezia \
   -v /opt/amneziawg-ui/certs:/app/certs \
-  -v /opt/amneziawg-ui/logs:/var/log/amnezia \
+  -v /opt/amneziawg-ui/log:/var/log \
   -e ADMIN_USERNAME=user \
   -e ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2' \
   -e DEFAULT_MTU=1420 \
@@ -25,6 +25,6 @@ docker run -d \
   --sysctl net.ipv4.ip_forward=1 \
   --sysctl net.ipv4.conf.all.src_valid_mark=1 \
   --device /dev/net/tun \
-  --restart unless-stopped \
+  --restart always \
   n00b1k/amneziawg-ui:latest
 ```

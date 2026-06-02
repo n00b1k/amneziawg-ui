@@ -7,12 +7,6 @@ def generate_hash(password):
     password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)
     return password_hash.decode('utf-8')
 
-def convert_to_double_dollar(hash_str):
-    """Convert single $ to double $$ in bcrypt hash"""
-    # bcrypt hash format: $2b$12$...
-    # Convert to: $$2b$$12$$...
-    return hash_str.replace('$', '$$')
-
 def main():
     parser = argparse.ArgumentParser(
         description='Generate password hash for AmneziaWG Web UI',
@@ -20,7 +14,7 @@ def main():
         epilog='''
 Examples:
   python3 generate_password_hash.py 'mysecretpassword'
-  docker run --rm n00b1k/awg-web-ui:1.1.5 gph 'mysecretpassword'
+  docker run --rm n00b1k/amneziawg-ui:latest gph 'mysecretpassword'
         '''
     )
     

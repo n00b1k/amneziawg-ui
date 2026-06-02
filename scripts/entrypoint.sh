@@ -6,5 +6,9 @@ if [ "$1" = "gph" ]; then
     exec python3 /app/web-ui/generate_password_hash.py "$@"
 fi
 
-# Иначе запускаем основной процесс
-exec "$@"
+while true; do
+    echo "[$(date -Iseconds)] Starting Flask application..."
+    python3 /app/web-ui/app.py
+    echo "[$(date -Iseconds)] Flask crashed or exited. Restarting in 2 seconds..." >&2
+    sleep 2
+done

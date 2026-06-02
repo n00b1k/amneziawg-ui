@@ -53,6 +53,7 @@ class AmneziaManager:
 
             for service in services:
                 try:
+                    requests.packages.urllib3.util.connection.HAS_IPV6 = False
                     response = requests.get(service, timeout=5)
                     if response.status_code == 200:
                         ip = response.text.strip()
