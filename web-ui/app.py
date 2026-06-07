@@ -14,11 +14,21 @@ from contextlib import contextmanager
 import bcrypt
 
 from logs import setup_logging
+import logging
 
+class HealthCheckFilter(logging.Filter):
+    def filter(self, record):
+        # Проверяем, содержит ли сообщение запрос к /health
+        msg = record.getMessage()
+        if 'GET /health' in msg or 'HEAD /health' in msg:
+            return False
+        return True
+    
 app = Flask(__name__,
     template_folder=TEMPLATE_DIR,
     static_folder=STATIC_DIR
 )
+logging.getLogger('werkzeug').addFilter(HealthCheckFilter())
 app.secret_key = os.urandom(24)
 logger = setup_logging(app)
 
