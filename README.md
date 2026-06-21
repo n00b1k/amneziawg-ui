@@ -40,7 +40,7 @@ Official docker image repository: https://hub.docker.com/r/n00b1k/amneziawg-ui
 ### Docker Run Example
 
 ```bash
-docker run --rm n00b1k/amneziawg-ui:latest gph 'password'
+ docker run --rm n00b1k/amneziawg-ui:latest gph 'password'
 ```
 
 ```bash
@@ -52,7 +52,7 @@ docker run -d \
   -v /opt/amneziawg-ui/certs:/app/certs \
   -v /opt/amneziawg-ui/log:/var/log \
   -e ADMIN_USERNAME=user \
-  -e ADMIN_PASSWORD_HASH='$2b$12$ePJa8CpQ2T2h2ISjqNeec.ARH7kK/VyIpf6KhPhMgSDRwM.r2mmxa' \
+  -e ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2' \
   -e DEFAULT_MTU=1420 \
   -e DEFAULT_SUBNET=192.168.99.0/24 \
   -e DEFAULT_PORT=51820 \
@@ -62,7 +62,7 @@ docker run -d \
   --sysctl net.ipv4.ip_forward=1 \
   --sysctl net.ipv4.conf.all.src_valid_mark=1 \
   --device /dev/net/tun \
-  --restart always \
+  --restart unless-stopped \
   n00b1k/amneziawg-ui:latest
 ```
 

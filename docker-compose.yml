@@ -1,12 +1,13 @@
 services:
     amneziawg-ui:
         container_name: amneziawg-ui
+        image: n00b1k/amneziawg-ui:latest
         ports:
-            - 5000:5000
             - 51820:51820/udp
         volumes:
             - /opt/amneziawg-ui:/etc/amnezia
             - /opt/amneziawg-ui/certs:/app/certs
+            - /opt/amneziawg-ui/log:/var/log
         environment:
             - ADMIN_USERNAME=user
             - ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2'
@@ -14,6 +15,23 @@ services:
             - DEFAULT_SUBNET=192.168.99.0/24
             - DEFAULT_PORT=51820
             - DEFAULT_DNS=1.1.1.1,9.9.9.9
+        labels:
+            - "traefik.enable=true"
+
+            # HTTPS роутер (основной)
+            - "traefik.http.routers.amnezia.entrypoints=https"
+            - "traefik.http.routers.amnezia.rule=Host(`amnezia.site.com`)"
+            - "traefik.http.routers.amnezia.tls=true"
+            - "traefik.http.routers.amnezia.tls.certresolver=letsencrypt"
+            - "traefik.http.routers.amnezia.service=amnezia"
+
+            # Сервис с явным указанием HTTPS и небезопасного транспорта
+            - "traefik.http.services.amnezia.loadbalancer.server.scheme=https"
+            - "traefik.http.services.amnezia.loadbalancer.server.port=5000"
+            - "traefik.http.services.amnezia.loadbalancer.serverstransport=allow-insecure@file"
+
+            # Важно: указать сеть, в которой Traefik ищет этот контейнер
+            - "traefik.docker.network=proxy"
         cap_add:
             - NET_ADMIN
             - SYS_MODULE
@@ -22,5 +40,10 @@ services:
             - net.ipv4.conf.all.src_valid_mark=1
         devices:
             - /dev/net/tun
+        networks:
+            - proxy
         restart: unless-stopped
-        image: n00b1k/amneziawg-ui:latest
+
+networks:
+    proxy:
+        external: true

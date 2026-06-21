@@ -25,6 +25,6 @@ docker run -d \
   --sysctl net.ipv4.ip_forward=1 \
   --sysctl net.ipv4.conf.all.src_valid_mark=1 \
   --device /dev/net/tun \
-  --restart always \
+  --restart unless-stopped \
   n00b1k/amneziawg-ui:latest
 ```
