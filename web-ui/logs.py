@@ -3,6 +3,7 @@ import logging
 import time
 from logging.handlers import RotatingFileHandler
 from flask import Flask, request
+from config import APP_VERSION
 
 def setup_logging(app: Flask):
     """Настраивает логирование Flask в файлы, указанные в config.ALLOWED_LOG_FILES."""
@@ -69,7 +70,7 @@ def setup_logging(app: Flask):
         return response
 
     # Логируем старт приложения
-    app.logger.info("Application started")
+    app.logger.info(f"Application started (Version {APP_VERSION})")
 
-    app.logger.info("Logging initialized")
+    app.logger.info(f"Logging initialized")
     return app.logger

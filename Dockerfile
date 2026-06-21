@@ -19,6 +19,7 @@ RUN apk update && apk add \
     iproute2 \
     openresolv \
     openssl \
+    tzdata \
     && rm -rf /var/cache/apk/*
 
 RUN pip3 install flask flask_socketio flask-login bcrypt requests python-socketio waitress --break-system-packages
@@ -33,7 +34,8 @@ RUN chmod +x /app/scripts/*.sh
 RUN ln -s /app/web-ui/generate_password_hash.py /usr/local/bin/gph && chmod +x /usr/local/bin/gph
 
 # Переменные окружения
-ENV PRODUCTION=false \
+ENV TZ=UTC \
+    PRODUCTION=false \
     AUTO_START_SERVERS=true \
     DEFAULT_MTU=1420 \
     DEFAULT_SUBNET=192.168.99.0/24 \
