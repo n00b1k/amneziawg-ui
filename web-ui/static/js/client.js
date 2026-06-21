@@ -65,6 +65,20 @@ export function downloadClientConfig(serverId, clientId) {
     api.downloadClientConfig(serverId, clientId);
 }
 
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.qr-code-btn');
+    if (!btn) return;
+    e.preventDefault();
+    const serverId = btn.dataset.serverId;
+    const clientId = btn.dataset.clientId;
+    const clientName = btn.dataset.clientName;
+    if (serverId && clientId && clientName) {
+        // Проверка, чтобы не открывать модалку дважды
+        if (document.getElementById('qrModal')) return;
+        window.amneziaApp.showClientQRCode(serverId, clientId, clientName);
+    }
+});
+
 // ----- QR-код -----
 export function showClientQRCode(serverId, clientId, clientName) {
     currentQRServerId = serverId;
@@ -412,7 +426,10 @@ function renderServerClients(serverId, clients, traffic = {}) {
                                 </svg>
                                 Edit
                             </button>
-                            <button onclick="window.amneziaApp.showClientQRCode('${serverId}', '${client.id}', '${safeName}')" class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-purple-800 flex items-center"
+                            <button class="qr-code-btn bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium transition-all duration-200 shadow hover:bg-purple-800 flex items-center"
+                                    data-server-id="${serverId}"
+                                    data-client-id="${client.id}"
+                                    data-client-name="${escapeHtml(client.name)}"
                                     title="Show QR Code">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>

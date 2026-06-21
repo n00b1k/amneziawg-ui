@@ -65,7 +65,15 @@ export function showTempMessage(message, type) {
 
 export function escapeHtml(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;',
+    };
+    return text.replace(/[&<>"'/]/g, function(s) {
+        return map[s];
+    });
 }
