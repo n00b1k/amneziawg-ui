@@ -88,6 +88,7 @@ function displayServerConfigModal(serverInfo) {
                                 <div><span class="font-medium">Clients:</span> ${serverInfo.clients_count}</div>
                                 <div><span class="font-medium">DNS:</span> ${escapeHtml(serverInfo.dns.join(', '))}</div>
                                 <div><span class="font-medium">MTU:</span> ${serverInfo.mtu}</div>
+                                <div><span class="font-medium">Allowed IPs:</span> ${escapeHtml(serverInfo.allowed_ips)}</div>
                                 <div class="truncate"><span class="font-medium">Public Key:</span>
                                     <span class="font-mono text-xs">${escapeHtml(serverInfo.public_key)}</span>
                                 </div>
@@ -131,6 +132,32 @@ function displayServerConfigModal(serverInfo) {
                         <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto max-h-40 overflow-y-auto">${escapeHtml(serverInfo.config_preview)}</pre>
                     </div>
 
+                    ${serverInfo.clients && serverInfo.clients.length ? `
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">Clients</h4>
+                        <div class="bg-gray-50 p-3 rounded overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-gray-600">
+                                        <th class="pb-1">Name</th>
+                                        <th class="pb-1">IP</th>
+                                        <th class="pb-1">AllowedIPs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${serverInfo.clients.map(client => `
+                                        <tr class="border-t border-gray-200">
+                                            <td class="py-1">${escapeHtml(client.name)}</td>
+                                            <td class="py-1">${escapeHtml(client.client_ip)}</td>
+                                            <td class="py-1 font-mono text-xs">${escapeHtml(client.allowed_ips || '0.0.0.0/0, ::/0')}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="flex justify-end space-x-3 pt-4 border-t">
                         <button onclick="window.amneziaApp.showRawServerConfig('${serverInfo.id}')"
                                 class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-800">View Full Config</button>
@@ -148,6 +175,8 @@ function displayServerConfigModal(serverInfo) {
 }
 
 function displayRawConfigModal(config) {
+    //const configContent = config.config_content || '';
+    const configContent = typeof config.config_content === 'string' ? config.config_content : JSON.stringify(config.config_content, null, 2);
     const encodedConfig = encodeURIComponent(JSON.stringify(config));
     const modalHtml = `
         <div id="rawConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -181,6 +210,9 @@ function displayRawConfigModal(config) {
             </div>
         </div>
     `;
+
+    console.log('config:', config);
+    console.log('config.config_content type:', typeof config.config_content);
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }

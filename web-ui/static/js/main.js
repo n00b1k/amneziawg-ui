@@ -303,6 +303,9 @@ class AmneziaApp {
         // Determine if this is edit mode
         const isEditMode = !!client;
         
+        // Get current allowed_ips value
+        const allowedIpsValue = client && client.allowed_ips ? client.allowed_ips : '0.0.0.0/0, ::/0';
+
         // Format created_at if it exists
         let created_at_html = '';
         if (client && client.created_at) {

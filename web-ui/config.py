@@ -1,6 +1,6 @@
 import os
 
-APP_VERSION = '3.27'
+APP_VERSION = '3.28'
 
 # Get the absolute path to the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +12,7 @@ AUTO_START_SERVERS = os.getenv('AUTO_START_SERVERS', 'true').lower() == 'true'
 DEFAULT_MTU = int(os.getenv('DEFAULT_MTU', '1420'))
 DEFAULT_SUBNET = os.getenv('DEFAULT_SUBNET', '192.168.99.0/24')
 DEFAULT_PORT = int(os.getenv('DEFAULT_PORT', '51820'))
+DEFAULT_ALLOWED_IPS = os.getenv('DEFAULT_ALLOWED_IPS', '0.0.0.0/0, ::/0')
 DEFAULT_DNS = os.getenv('DEFAULT_DNS', '1.1.1.1,9.9.9.9')
 FLASK_PORT = int(os.getenv('FLASK_PORT', '5000'))
 PRODUCTION = os.getenv('PRODUCTION', 'false').lower() == 'true'

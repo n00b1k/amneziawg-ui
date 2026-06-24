@@ -242,6 +242,7 @@ async function showClientModal(serverId, client = null) {
     const applyISettings = client ? (client.apply_i_settings || false) : false;
     const iSettings = client ? (client.i_settings || {}) : {};
     currentEditingClientName = clientName
+    const allowedIpsValue = client && client.allowed_ips ? client.allowed_ips : '0.0.0.0/0, ::/0';
 
     let serverInfo = null;
     try {
@@ -280,10 +281,28 @@ async function showClientModal(serverId, client = null) {
                         <input type="hidden" id="serverId" value="${serverId}">
                         <input type="hidden" id="clientId" value="${client ? client.id : ''}">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Client Name</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Client Name</label>
                             <input type="text" id="clientName" value="${escapeHtml(clientName)}" required class="w-full px-4 py-3 border-2 rounded-xl"}>
                         </div>
-                        ${isEdit ? `<div class="pt-4 border-t"><label class="block text-sm font-medium text-gray-700">Auto-suspend at</label><input type="datetime-local" id="suspendAt" value="${suspendAtValue}" class="w-full px-4 py-3 border-2 rounded-xl"><p class="text-xs text-gray-500 mt-1">Leave empty to disable auto-suspension.</p></div>` : ''}
+                        ${isEdit ? `<div class="pt-4 border-t"><label class="block text-sm font-medium text-gray-700 mb-2">Auto-suspend at</label><input type="datetime-local" id="suspendAt" value="${suspendAtValue}" class="w-full px-4 py-3 border-2 rounded-xl"><p class="text-xs text-gray-500 mt-1">Leave empty to disable auto-suspension.</p></div>` : ''}
+
+                        <!-- AllowedIPs Field -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Allowed IPs (Client-side routing)</label>
+                            <input
+                            type="text"
+                            id="allowedIps"
+                            value="${escapeHtml(allowedIpsValue)}"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm"
+                            placeholder="0.0.0.0/0, ::/0"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">
+                            Comma-separated list of IP ranges to route through the VPN.<br />
+                            Default: 0.0.0.0/0, ::/0 (all traffic)<br />
+                            Example: 10.0.0.0/24, 192.168.1.0/24
+                            </p>
+                        </div>
+
                         <div class="pt-4 border-t">
                             <div class="flex items-center mb-4">
                                 <input type="checkbox" id="applyISettings" ${applyISettings ? 'checked' : ''} class="h-4 w-4 text-blue-600">
@@ -326,12 +345,14 @@ export async function saveClient() {
     const clientId = document.getElementById('clientId').value;
     const clientName = document.getElementById('clientName')?.value.trim();
     const applyISettings = document.getElementById('applyISettings')?.checked || false;
+    const allowedIps = document.getElementById('allowedIps').value.trim() || '0.0.0.0/0, ::/0';
 
     if (!clientName) {
         showTempMessage('Client name is required', 'error');
         return;
     }
-    const data = { name: clientName, apply_i_settings: applyISettings };
+
+    const data = { name: clientName, apply_i_settings: applyISettings, allowed_ips: allowedIps };
     if (applyISettings) {
         const iSettings = {};
         for (let i = 1; i <= 5; i++) {
@@ -341,17 +362,19 @@ export async function saveClient() {
         data.i_settings = iSettings;
     }
 
-    if (clientName !== currentEditingClientName) {
-        await fetch(`/api/servers/${serverId}/clients/${clientId}/name`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: clientName })
-        });
-    }
+    //if (currentEditingClientName != '')
+        if (clientId && clientName !== currentEditingClientName) {
+            await fetch(`/api/servers/${serverId}/clients/${clientId}/name`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: clientName })
+            });
+        }
 
     try {
         if (clientId) {
             await api.updateClientISettings(serverId, clientId, data);
+            await api.updateClientAllowedIPs(serverId, clientId, allowedIps);
             const suspendAtInput = document.getElementById('suspendAt');
             let suspendAtUTC = null;
             if (suspendAtInput && suspendAtInput.value) {
@@ -408,6 +431,7 @@ function renderServerClients(serverId, clients, traffic = {}) {
                                     <span class="font-medium">${escapeHtml(client.name)}</span>
                                     <span class="text-sm text-gray-600">(id: ${client.id}) </span>
                                     <span class="text-sm text-gray-600">${client.client_ip}</span>
+                                    <span class="text-xs text-gray-500 ml-2">AllowedIPs: ${escapeHtml(client.allowed_ips || '0.0.0.0/0, ::/0')}</span>
                                     ${hasISettings ? '<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">I-settings</span>' : ''}
                                     ${statusBadge}
                                 </div>

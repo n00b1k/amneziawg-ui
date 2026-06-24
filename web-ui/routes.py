@@ -11,7 +11,7 @@ from config import (
     ALLOWED_LOG_TYPES, ALLOWED_LOG_PATHS, ALLOWED_LOG_FILES,
     resolve_allowed_log_path, format_bytes, DEFAULT_I1, DEFAULT_I2,
     DEFAULT_I3, DEFAULT_I4, DEFAULT_I5, AUTO_START_SERVERS,
-    DEFAULT_MTU, DEFAULT_SUBNET, DEFAULT_PORT, DEFAULT_DNS, DNS_SERVERS,
+    DEFAULT_MTU, DEFAULT_SUBNET, DEFAULT_PORT, DEFAULT_ALLOWED_IPS, DEFAULT_DNS, DNS_SERVERS,
     APP_VERSION
 )
 #from auth import login_attempts
@@ -27,6 +27,7 @@ def register_routes(app, amnezia_manager):
             "default_mtu": DEFAULT_MTU,
             "default_subnet": DEFAULT_SUBNET,
             "default_port": DEFAULT_PORT,
+            "default_allowed_ips": DEFAULT_ALLOWED_IPS,
             "default_dns": DEFAULT_DNS,
             "dns_servers": DNS_SERVERS
         })
@@ -72,8 +73,9 @@ def register_routes(app, amnezia_manager):
         client_name = data.get('name', 'New Client')
         apply_i_settings = data.get('apply_i_settings', False)
         i_settings = data.get('i_settings', {})
+        allowed_ips = data.get('allowed_ips', '0.0.0.0/0, ::/0')
 
-        result = amnezia_manager.add_wireguard_client(server_id, client_name, apply_i_settings, i_settings)
+        result = amnezia_manager.add_wireguard_client(server_id, client_name, apply_i_settings, i_settings, allowed_ips)
         if result:
             client_config, config_content = result
             return jsonify({
@@ -81,6 +83,19 @@ def register_routes(app, amnezia_manager):
                 "config": config_content
             })
         return jsonify({"error": "Server not found"}), 404
+
+    @app.route('/api/servers/<server_id>/clients/<client_id>/allowed-ips', methods=['PUT'])
+    def update_client_allowed_ips(server_id, client_id):
+        data = request.json
+        allowed_ips = data.get('allowed_ips', '0.0.0.0/0, ::/0')
+        client, config_content = amnezia_manager.update_client_allowed_ips(server_id, client_id, allowed_ips)
+        if client:
+            return jsonify({
+                "client": client,
+                "config": config_content
+            })
+        return jsonify({"error": "Client not found"}), 404
+
 
     @app.route('/api/servers/<server_id>/clients/<client_id>', methods=['DELETE'])
     @login_required
@@ -184,6 +199,8 @@ def register_routes(app, amnezia_manager):
     @app.route('/api/servers/<server_id>/config')
     @login_required
     def get_server_config(server_id):
+        config_content = ""
+
         """Get the raw WireGuard server configuration"""
         server = next((s for s in amnezia_manager.config['servers'] if s['id'] == server_id), None)
         if not server:
@@ -262,9 +279,11 @@ def register_routes(app, amnezia_manager):
             "server_ip": server['server_ip'],
             "subnet": server['subnet'],
             "mtu": server.get('mtu', 1420),
+            #"allowed_ips": server['allowed_ips'],
             "obfuscation_enabled": server['obfuscation_enabled'],
             "obfuscation_params": server.get('obfuscation_params', {}),
             "clients_count": len(server['clients']),
+            "clients": server['clients'],
             "created_at": server['created_at'],
             "config_preview": config_preview,
             "public_key": server['server_public_key'],
@@ -533,6 +552,7 @@ def register_routes(app, amnezia_manager):
     def update_client_name(server_id, client_id):
         data = request.json
         new_name = data.get('name', '').strip()
+        print(f"---1--- {new_name}") 
         if not new_name:
             return jsonify({"error": "Name is required"}), 400
 
@@ -544,7 +564,9 @@ def register_routes(app, amnezia_manager):
         if not client:
             return jsonify({"error": "Client not found"}), 404
 
+        print(f"---2--- {new_name}")
         old_name = client['name']
+        print(f"---3--- {old_name}")
         client['name'] = new_name
 
         # Обновляем в глобальном словаре clients

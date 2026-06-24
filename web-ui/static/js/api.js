@@ -152,6 +152,19 @@ export async function updateClientISettings(serverId, clientId, data) {
     return response.json();
 }
 
+export async function updateClientAllowedIPs(serverId, clientId, allowedIps) {
+    const response = await fetch(`/api/servers/${serverId}/clients/${clientId}/allowed-ips`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allowed_ips: allowedIps })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update AllowedIPs');
+    }
+    return response.json();
+}
+
 /**
  * Установить время автоматической приостановки клиента
  * @param {string} serverId

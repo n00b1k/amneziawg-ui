@@ -65,6 +65,7 @@ export function showTempMessage(message, type) {
 
 export function escapeHtml(text) {
     if (!text) return '';
+    if (typeof text !== 'string') text = String(text);
     const map = {
         '&': '&amp;',
         '<': '&lt;',

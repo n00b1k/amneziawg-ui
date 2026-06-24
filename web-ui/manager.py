@@ -11,7 +11,7 @@ import time
 import ipaddress
 from config import (
     CONFIG_DIR, WIREGUARD_CONFIG_DIR, CONFIG_FILE,
-    DEFAULT_MTU, DEFAULT_SUBNET, DEFAULT_PORT, DNS_SERVERS,
+    DEFAULT_MTU, DEFAULT_SUBNET, DEFAULT_PORT, DEFAULT_ALLOWED_IPS, DNS_SERVERS,
     ENABLE_OBFUSCATION, AUTO_START_SERVERS, DEFAULT_I1, DEFAULT_I2,
     DEFAULT_I3, DEFAULT_I4, DEFAULT_I5
 )
@@ -174,6 +174,7 @@ class AmneziaManager:
         port = server_data.get('port', DEFAULT_PORT)
         subnet = server_data.get('subnet', DEFAULT_SUBNET)
         mtu = server_data.get('mtu', DEFAULT_MTU)
+        allowed_ips = server_data.get('allowed_ips', DEFAULT_ALLOWED_IPS)
 
         # Получить Public IP из запроса или использовать автоопределение
         custom_public_ip = server_data.get('public_ip', '').strip()
@@ -270,6 +271,7 @@ H4 = {obfuscation_params['H4']}
             "subnet": subnet,
             "server_ip": server_ip,
             "mtu": mtu,
+            "allowed_ips": allowed_ips,
             "public_ip": public_ip,
             "custom_public_ip": bool(custom_public_ip),
             "obfuscation_enabled": enable_obfuscation,
@@ -379,7 +381,7 @@ H4 = {obfuscation_params['H4']}
 
         return True
 
-    def add_wireguard_client(self, server_id, client_name, apply_i_settings=False, i_settings=None):
+    def add_wireguard_client(self, server_id, client_name, apply_i_settings=False, i_settings=None, allowed_ips=None):
         """Add a client to a WireGuard server with optional I-settings"""
         server = next((s for s in self.config['servers'] if s['id'] == server_id), None)
         if not server:
@@ -395,6 +397,13 @@ H4 = {obfuscation_params['H4']}
         client_ip = self.get_new_client_ip(server_id)
         if not client_ip:
             return None
+        
+        # Set AllowedIPs only for client config
+        server_peer_allowed_ips = f"{client_ip}/32"
+        if allowed_ips is None or not allowed_ips.strip():
+            client_allowed_ips = DEFAULT_ALLOWED_IPS
+        else:
+            client_allowed_ips = allowed_ips.strip()
 
         # Process I-settings
         client_i_settings = {}
@@ -430,7 +439,8 @@ H4 = {obfuscation_params['H4']}
             "obfuscation_params": server["obfuscation_params"],
             "apply_i_settings": apply_i_settings,
             "i_settings": client_i_settings,
-            "awg2_enabled": server.get("awg2_enabled", False)
+            "awg2_enabled": server.get("awg2_enabled", False),
+            "allowed_ips": client_allowed_ips
         }
 
         # Add client to server config
@@ -439,7 +449,7 @@ H4 = {obfuscation_params['H4']}
 [Peer]
 PublicKey = {client_keys['public_key']}
 PresharedKey = {preshared_key}
-AllowedIPs = {client_ip}/32
+AllowedIPs = {server_peer_allowed_ips}
 """
 
         # Append client to server config file
@@ -590,16 +600,46 @@ H4 = {params['H4']}
                     if i_value:  # Only add non-empty values
                         config += f"I{i} = {i_value}\n"
         
+        # Use custom AllowedIPs if set, otherwise default to all traffic
+        allowed_ips = client_config.get('allowed_ips', '0.0.0.0/0, ::/0')
+
         config += f"""
 [Peer]
 PublicKey = {server['server_public_key']}
 PresharedKey = {client_config['preshared_key']}
 Endpoint = {server['public_ip']}:{server['port']}
-AllowedIPs = 0.0.0.0/0, ::/0
+AllowedIPs = {allowed_ips}
 PersistentKeepalive = 25
 """
         return config
     
+    def update_client_allowed_ips(self, server_id, client_id, allowed_ips):
+        """Update client AllowedIPs setting"""
+        server = next((s for s in self.config['servers'] if s['id'] == server_id), None)
+        if not server:
+            return None, "Server not found"
+        
+        client = next((c for c in server["clients"] if c["id"] == client_id), None)
+        if not client:
+            return None, "Client not found"
+        
+        # Update allowed_ips
+        if allowed_ips and allowed_ips.strip():
+            client['allowed_ips'] = allowed_ips.strip()
+        else:
+            client['allowed_ips'] = '0.0.0.0/0, ::/0'
+
+        # Update global clients dict
+        if client_id in self.config["clients"]:
+            self.config["clients"][client_id]['allowed_ips'] = client['allowed_ips']
+            
+        self.save_config()
+
+        # Regenerate config
+        config_content = self.generate_wireguard_client_config(server, client, include_comments=True)
+        return client, config_content
+    
+
     def update_client_i_settings(self, server_id, client_id, apply_i_settings=None, i_settings=None):
         """Update client I-settings"""
         server = next((s for s in self.config['servers'] if s['id'] == server_id), None)
@@ -763,7 +803,7 @@ PersistentKeepalive = 25
 
         if self.logger:
             self.logger.info(f"clientID={client_id} active")
-                             
+
         return True, "Client activated successfully"
     
     def start_suspension_checker(self):
