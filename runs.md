@@ -1,6 +1,9 @@
 ### run
 
-docker run --rm n00b1k/amneziawg-ui:latest gph 'password'
+```
+ docker run --rm n00b1k/amneziawg-ui:latest gph 'password'
+```
+
 -e ADMIN_PASSWORD_HASH='$2b$12$p4YhOrFCPZGwcZXj92aiAejI8sksU46lQiwlJPzSzKvh7moxju3v2'
 
 Place manual certificates key.pem and cert.pem in the catalog
@@ -20,6 +23,7 @@ docker run -d \
   -e DEFAULT_SUBNET=192.168.99.0/24 \
   -e DEFAULT_PORT=51820 \
   -e DEFAULT_DNS="1.1.1.1,9.9.9.9" \
+  -e TZ=UTC \
   --cap-add=NET_ADMIN \
   --cap-add SYS_MODULE \
   --sysctl net.ipv4.ip_forward=1 \

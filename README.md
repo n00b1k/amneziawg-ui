@@ -57,6 +57,7 @@ docker run -d \
   -e DEFAULT_SUBNET=192.168.99.0/24 \
   -e DEFAULT_PORT=51820 \
   -e DEFAULT_DNS="1.1.1.1,9.9.9.9" \
+  -e TZ=UTC \
   --cap-add=NET_ADMIN \
   --cap-add SYS_MODULE \
   --sysctl net.ipv4.ip_forward=1 \

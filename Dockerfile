@@ -3,15 +3,13 @@ RUN apk add --no-cache git make gcc musl-dev linux-headers
 RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git && cd amneziawg-go && make && make install
 RUN git clone https://github.com/amnezia-vpn/amneziawg-tools.git && cd amneziawg-tools/src && make && make WITH_WGQUICK=yes install
 
-FROM alpine:3.22
+FROM python:3.13-alpine3.23
 
 COPY --from=builder /usr/bin/amneziawg-go /usr/bin/amneziawg-go
 COPY --from=builder /usr/bin/awg /usr/bin/awg
 COPY --from=builder /usr/bin/awg-quick /usr/bin/awg-quick
 
 RUN apk update && apk add \
-    python3 \
-    py3-pip \
     curl \
     iptables \
     iptables-legacy \
